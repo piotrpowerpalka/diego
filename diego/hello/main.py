@@ -37,9 +37,9 @@ async def main():
             break
 
         except Exception as exception:
-            print(type(exception).__name__)
-            print("Nie udało się zainicjować agentó, probujemy dalej....")
-            time.sleep(1)
+#            print(type(exception).__name__)
+            print("Nie udało się zainicjować agentów probujemy dalej....")
+            time.sleep(3)
             repeat = True
 
 #    while True:
