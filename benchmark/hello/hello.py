@@ -28,8 +28,8 @@ async def execute_benchmark_path(number_of_agents: int, host: str):
   agent_list = []
 
   for i in range(number_of_agents):
-    time.sleep(1)
-
+    #time.sleep(30)
+    print("running agent...")
     agent = HelloWorldAgent(
       f'{AGENT_BASE_JID}-{i}@{host}', AGENT_PASSWORD)
     agent_list.append(agent)
