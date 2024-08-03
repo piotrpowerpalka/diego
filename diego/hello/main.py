@@ -17,13 +17,20 @@ AGENT_PASSWORD = "123456789"
 
 async def main():
     print("Program starts running")
-    pv_auc = Auctionee(f"pv_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
+    auc_pv = Auctionee(f"pv_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
+    auc_bystar = Auctionee(f"bystar_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
+    auc_byprint = Auctionee(f"byprint_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
+
+
     ao = AuctionOperator(f"auctionoperator@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
     repeat = True
     
     while(repeat == True):
         try:
-            await pv_auc.start(auto_register=True)
+            await auc_pv.start(auto_register=True)
+            await auc_bystar.start(auto_register=True)
+            await auc_byprint.start(auto_register=True)
+
             await ao.start(auto_register=True)
             
             repeat = False
@@ -31,7 +38,7 @@ async def main():
 
         except Exception as exception:
             print(type(exception).__name__)
-            print("Nie udało się zainicjować agenta AO, probujemy dalej....")
+            print("Nie udało się zainicjować agentó, probujemy dalej....")
             time.sleep(1)
             repeat = True
 

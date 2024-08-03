@@ -18,7 +18,7 @@ class AuctionOperator(Agent):
     class CallForProposal(PeriodicBehaviour):
         async def run(self):
             print("CallForProposal beh running")
-            agent_list_test = ['pv_auctionee']
+            agent_list_test = ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']
 
             print("---> Call for proposal by AuctionOperator running")
 
@@ -29,7 +29,7 @@ class AuctionOperator(Agent):
                 # Instantiate the message
                 msg = Message(to=to_jid)
                 msg.set_metadata("performative", "CFP")
-                msg.body = "..."
+                msg.body = "Cześć byku !"
 
                 print("-------> CFP prepared to sent by AuctionOperator to: [{}]\n". format(curr_agent))
                 await self.send(msg)
