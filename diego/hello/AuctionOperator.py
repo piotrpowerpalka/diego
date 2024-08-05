@@ -9,11 +9,12 @@ import json
 DEFAULT_HOST = "server_hello"
 
 class AuctionOperator(Agent):
-    def __init__(self, jid: str, password: str, config: dict, verify_security: bool = False):
+    def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         self.offers_list = []
-        self.auctionee_list = self.config['auctionees']
-        
+        #self.auctionee_list = self.config['auctionees']
+        self.auctionee_list = ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']
+
     async def setup(self):
         print("Agent {} started".format(self.name))
 
@@ -23,7 +24,7 @@ class AuctionOperator(Agent):
 
     class CallForProposal(PeriodicBehaviour):
         async def run(self):
-            print("[{}] CallForProposal beh running".format(self.agent.name))
+#            print("[{}] CallForProposal beh running".format(self.agent.name))
             
             # behaviour ReceiveOffers added before sending offers, to avoid missing offers
             ro = self.agent.ReceiveOffers()
@@ -31,23 +32,23 @@ class AuctionOperator(Agent):
 
             for curr_agent in self.agent.auctionee_list:
 
-                to_jid = f"{curr_agent}@{DEFAULT_HOST}"
+                tojid = f"{curr_agent}@{DEFAULT_HOST}"
                 # Instantiate the message
-                msg = Message(to=to_jid)
+                msg = Message(to=tojid)
                 msg.set_metadata("performative", "CFP")
                 msg.set_metadata("language", "json")
                 msg.set_metadata("sender", self.agent.name)
                 msg.body = json.dumps({"timestamp": "tu timestamp", "energy": "active"})
 
                 await self.send(msg)
-                print("CFP sent by AuctionOperator to: [{}]\n". format(curr_agent))
+                print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
     
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
-            print("[{}] ReceiveOffers beh running".format(self.agent.name))
+            # print("[{}] ReceiveOffers beh running".format(self.agent.name))
             msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if msg:
-                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
+#                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
                 if (msg.get_metadata("language") == "json"):
                     self.agent.offers_list.append(json.loads(msg.body))
                 else:
@@ -79,15 +80,16 @@ class AuctionOperator(Agent):
             print("[{}] SendClearingInfo beh running".format(self.agent.jid))
             for curr_agent in self.agent.auctionee_list:
 
-                to_jid = f"{curr_agent}@{DEFAULT_HOST}"
+                tojid = f"{curr_agent}@{DEFAULT_HOST}"
                 # Instantiate the message
-                msg = Message(to=to_jid)
+                msg = Message(to=tojid)
                 msg.set_metadata("performative", "inform")
                 msg.set_metadata("sender", self.agent.name)
                 msg.body = "Siema byku !"
 
                 await self.send(msg)
-                print("SendClearingInfo sent by {} to: [{}]\n". format(self.agent.jid, curr_agent))
+                print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+
 
 
 

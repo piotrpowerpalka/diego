@@ -19,27 +19,25 @@ class Predictor(Agent):
 
     class WaitForRequest(CyclicBehaviour):
         async def run(self):
-            print("[{}]WaitForRequest beh running".format(self.agent.name))
+            # print("[{}]WaitForRequest beh running".format(self.agent.name))
             msg = await self.receive(timeout=1)  # wait for a message for 1 seconds
             if msg:
-                print("Message received with content: {}".format(msg.body))
-                pp = self.agent.ProvidePrediction(msg.get_metadata("sender"))
+#                print("Message received with content: {}".format(msg.body))
+                self.agent.device_manager = msg.get_metadata("sender")
+                pp = self.agent.ProvidePrediction()
                 self.agent.add_behaviour(pp)
     
     class ProvidePrediction(OneShotBehaviour):
-        def __init__(self, sender: str):
-            super().__init__(self)
-            self.sender = sender
-
         async def run(self):
-            print("[{}]ProvidePrediction beh running".format(self.agent.name))
+#            print("[{}]ProvidePrediction beh running".format(self.agent.name))
            
             # Instantiate the message
-            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
+            tojid = self.agent.device_manager
+            msg = Message(to=f"{tojid}@{DEFAULT_HOST}")
             msg.set_metadata("performative", "inform")
             msg.set_metadata("sender", self.agent.name)
             msg.set_metadata("language", "json")
 
             await self.send(msg)
-            print("SetWorkingPoint sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
+            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
         

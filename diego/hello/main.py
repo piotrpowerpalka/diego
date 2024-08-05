@@ -28,14 +28,14 @@ async def main():
     dm_bystar  = DeviceManager(f"bystar_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "bystar_predictor"}, verify_security=False)
     dm_byprint = DeviceManager(f"byprint_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "byprint_predictor"}, verify_security=False)
     
-
     # uruchamiamy tyle agentów Auctionee ile urządzeń
     auc_pv = Auctionee(f"pv_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, {"active": "not_controllable", "reactive": "controllable", "device_manager": "pv_device"}, verify_security=False)
     auc_bystar = Auctionee(f"bystar_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "bystar_device"}, verify_security=False)
     auc_byprint = Auctionee(f"byprint_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "byprint_device"}, verify_security=False)
 
+    #ao = AuctionOperator(f"auctionoperator@{DEFAULT_HOST}", AGENT_PASSWORD, {"auctionees: ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']"}, verify_security=False)
+    ao = AuctionOperator(f"auctionoperator@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
 
-    ao = AuctionOperator(f"auctionoperator@{DEFAULT_HOST}", AGENT_PASSWORD, {"auctionees: ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']"}, verify_security=False)
 
     repeat = True
     while(repeat == True):

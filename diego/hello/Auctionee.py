@@ -15,6 +15,7 @@ class Auctionee(Agent):
         super().__init__(jid, password, verify_security)
         self.offer = {"volume": 10.0, "price": 25, "energy": 'active'}
         self.config = config
+        self.energy_type = 0
         self.device_manager = self.config["device_manager"]
         
     async def setup(self):
@@ -25,7 +26,7 @@ class Auctionee(Agent):
     
     class WaitForMessage(CyclicBehaviour):
         async def run(self):
-            print("[{}] WaitForCFP | WaitForClearningInfo | WaitForWorkingPoint|Bounds beh running".format(self.agent.name))
+            # print("[{}] WaitForCFP | WaitForClearningInfo | WaitForWorkingPoint|Bounds beh running".format(self.agent.name))
             msg = await self.receive(timeout=1)  # wait for a message forever
             if msg:
                 if (msg.get_metadata("performative") == 'CFP' and msg.get_metadata("sender") == 'auctionoperator'):
@@ -35,23 +36,25 @@ class Auctionee(Agent):
 
                     ctrl = self.agent.config[energy_type]
                     if (ctrl == "controllable"):
-                        gwpb = self.agent.GetWorkingPointBounds(energy_type)
+                        self.energy_type = energy_type
+                        gwpb = self.agent.GetWorkingPointBounds()
                         self.agent.add_behaviour(gwpb)
 
                     if (ctrl == "not_controllable"):
-                        gwpi = self.agent.GetWorkingPointInfo(energy_type)
+                        self.energy_type = energy_type
+                        gwpi = self.agent.GetWorkingPointInfo()
                         self.agent.add_behaviour(gwpi)
 
                 if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == self.agent.device_manager):
                     # 
-                    print("[{}] Message with Working point / bounds received: [{}]".format(self.agent.name, msg.body))
+ #                   print("[{}] Message with Working point / bounds received: [{}]".format(self.agent.name, msg.body))
 
                     so = self.agent.SendOffer()
                     self.agent.add_behaviour(so)
 
                 if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == 'auctionoperator'):
                     # WaitForClearingInfo...
-                    print("[{}] Message with Clearing Info received: [{}]".format(self.agent.name, msg.body))
+#                    print("[{}] Message with Clearing Info received: [{}]".format(self.agent.name, msg.body))
 
                     swp = self.agent.SetWorkingPoint()       
                     self.agent.add_behaviour(swp)            
@@ -64,14 +67,15 @@ class Auctionee(Agent):
             print("[{}]SendOffer beh running".format(self.agent.name))
             
             # Instantiate the message
-            msg = Message(to=f"auctionoperator@{DEFAULT_HOST}")
+            tojid = f"auctionoperator@{DEFAULT_HOST}"
+            msg = Message(to=tojid)
             msg.set_metadata("performative", "propose")
             msg.set_metadata("language", "json")
             msg.body = json.dumps(self.agent.offer)
 
             await self.send(msg)
-            print("SendOffer sent by {} to  AuctionOperator".format(self.agent.name))
-
+            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+            
             wci = self.agent.WaitForClearingInfo()
             self.agent.add_behaviour(wci)
 
@@ -80,20 +84,17 @@ class Auctionee(Agent):
             print("[{}]SetWorkingPoint beh running".format(self.agent.name))
            
             # Instantiate the message
-            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
+            tojid = self.agent.device_manager
+            msg = Message(to=f"{tojid}@{DEFAULT_HOST}")
             msg.set_metadata("performative", "inform")
             msg.set_metadata("sender", self.agent.name)
             msg.set_metadata("language", "json")
 
             await self.send(msg)
-            print("SetWorkingPoint sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
-
+            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+            
 
     class GetWorkingPointInfo(OneShotBehaviour):
-        def __init__(self, energy_type: str):
-            super().__init__(self)
-            self.energy_type = energy_type
-
         async def run(self):
             print("[{}]GetWorkingPointInfo beh running".format(self.agent.name))
            
@@ -102,17 +103,13 @@ class Auctionee(Agent):
             msg.set_metadata("performative", "query")
             msg.set_metadata("sender", self.agent.name)
             msg.set_metadata("language", "json")
-            msg.body = {"energy": self.energy_type}
+            msg.body = json.dumps({"energy": self.agent.energy_type})
 
             await self.send(msg)
-            print("GetWorkingPointInfo sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
+            print("GetWorkingPointInfo sent by {} to  {}".format(self.agent.name, self.agent.device_manager))
 
 
     class GetWorkingPointBounds(OneShotBehaviour):
-        def __init__(self, energy_type: str):
-            super().__init__(self)
-            self.energy_type = energy_type
-
         async def run(self):
             print("[{}]GetWorkingPointBounds beh running".format(self.agent.name))
            
@@ -121,7 +118,7 @@ class Auctionee(Agent):
             msg.set_metadata("performative", "query")
             msg.set_metadata("sender", self.agent.name)
             msg.set_metadata("language", "json")
-            msg.body = {"energy": self.energy_type}
+            msg.body = json.dumps({"energy": self.agent.energy_type})
 
             await self.send(msg)
-            print("GetWorkingPointBounds sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
+            print("GetWorkingPointBounds sent by {} to  {}".format(self.agent.name, self.agent.device_manager))
