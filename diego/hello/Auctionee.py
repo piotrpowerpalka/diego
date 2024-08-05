@@ -11,31 +11,53 @@ import json
 DEFAULT_HOST = "server_hello"
 
 class Auctionee(Agent):
-    def __init__(self, jid: str, password: str, verify_security: bool = False):
+    def __init__(self, jid: str, password: str, config: dict, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         self.offer = {"volume": 10.0, "price": 25, "energy": 'active'}
+        self.config = config
+        self.device_manager = self.config["device_manager"]
         
     async def setup(self):
         print("{} Auctionee Agent started".format(self.name))
 
-        wfm = self.WaitForCFP()
+        wfm = self.WaitForMessage()
         self.add_behaviour(wfm)
     
-    class WaitForCFP(CyclicBehaviour):
+    class WaitForMessage(CyclicBehaviour):
         async def run(self):
-            print("[{}]WaitForCFP beh running".format(self.agent.name))
-            msg = await self.receive(timeout=15*60)  # wait for a message for 10 seconds
+            print("[{}] WaitForCFP | WaitForClearningInfo | WaitForWorkingPoint|Bounds beh running".format(self.agent.name))
+            msg = await self.receive(timeout=1)  # wait for a message forever
             if msg:
-                print("Message received with content: {}".format(msg.body))
-                # differentiate between active, and reactive energy
+                if (msg.get_metadata("performative") == 'CFP' and msg.get_metadata("sender") == 'auctionoperator'):
+                    # WaitForCFP...
+                    msg_json = json.loads(msg.body)
+                    energy_type = msg_json['energy']
 
-                so = self.agent.SendOffer()
-                self.agent.add_behaviour(so)
+                    ctrl = self.agent.config[energy_type]
+                    if (ctrl == "controllable"):
+                        gwpb = self.agent.GetWorkingPointBounds(energy_type)
+                        self.agent.add_behaviour(gwpb)
 
-                self.kill()
-            else:
-                print("Did not received any message after 10 seconds")
-                self.kill()
+                    if (ctrl == "not_controllable"):
+                        gwpi = self.agent.GetWorkingPointInfo(energy_type)
+                        self.agent.add_behaviour(gwpi)
+
+                if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == self.agent.device_manager):
+                    # 
+                    print("[{}] Message with Working point / bounds received: [{}]".format(self.agent.name, msg.body))
+
+                    so = self.agent.SendOffer()
+                    self.agent.add_behaviour(so)
+
+                if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == 'auctionoperator'):
+                    # WaitForClearingInfo...
+                    print("[{}] Message with Clearing Info received: [{}]".format(self.agent.name, msg.body))
+
+                    swp = self.agent.SetWorkingPoint()       
+                    self.agent.add_behaviour(swp)            
+                # 
+
+                
     
     class SendOffer(OneShotBehaviour):
         async def run(self):
@@ -53,23 +75,53 @@ class Auctionee(Agent):
             wci = self.agent.WaitForClearingInfo()
             self.agent.add_behaviour(wci)
 
-    class WaitForClearingInfo(CyclicBehaviour):
+    class SetWorkingPoint(OneShotBehaviour):
         async def run(self):
-            print("WaitForClearingInfo beh running")
-            msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
-            if msg:
-                print("Message received with content: {}".format(msg.body))
+            print("[{}]SetWorkingPoint beh running".format(self.agent.name))
+           
+            # Instantiate the message
+            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
+            msg.set_metadata("performative", "inform")
+            msg.set_metadata("sender", self.agent.name)
+            msg.set_metadata("language", "json")
 
-                # ...
+            await self.send(msg)
+            print("SetWorkingPoint sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
 
-                self.kill()
-            else:
-                print("Did not received any message after 10 seconds")
-                self.kill()
 
-        async def on_end(self):
-            wfm = self.agent.WaitForCFP()
-            self.agent.add_behaviour(wfm)
-            
+    class GetWorkingPointInfo(OneShotBehaviour):
+        def __init__(self, energy_type: str):
+            super().__init__(self)
+            self.energy_type = energy_type
 
-    
+        async def run(self):
+            print("[{}]GetWorkingPointInfo beh running".format(self.agent.name))
+           
+            # Instantiate the message
+            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
+            msg.set_metadata("performative", "query")
+            msg.set_metadata("sender", self.agent.name)
+            msg.set_metadata("language", "json")
+            msg.body = {"energy": self.energy_type}
+
+            await self.send(msg)
+            print("GetWorkingPointInfo sent by {} to  {}".format(self.agent.name), self.agent.device_manager)
+
+
+    class GetWorkingPointBounds(OneShotBehaviour):
+        def __init__(self, energy_type: str):
+            super().__init__(self)
+            self.energy_type = energy_type
+
+        async def run(self):
+            print("[{}]GetWorkingPointBounds beh running".format(self.agent.name))
+           
+            # Instantiate the message
+            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
+            msg.set_metadata("performative", "query")
+            msg.set_metadata("sender", self.agent.name)
+            msg.set_metadata("language", "json")
+            msg.body = {"energy": self.energy_type}
+
+            await self.send(msg)
+            print("GetWorkingPointBounds sent by {} to  {}".format(self.agent.name), self.agent.device_manager)

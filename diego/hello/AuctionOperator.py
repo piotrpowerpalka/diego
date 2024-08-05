@@ -9,11 +9,11 @@ import json
 DEFAULT_HOST = "server_hello"
 
 class AuctionOperator(Agent):
-    def __init__(self, jid: str, password: str, verify_security: bool = False):
+    def __init__(self, jid: str, password: str, config: dict, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         self.offers_list = []
-        self.auctionee_list = ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']
-
+        self.auctionee_list = self.config['auctionees']
+        
     async def setup(self):
         print("Agent {} started".format(self.name))
 
@@ -23,7 +23,7 @@ class AuctionOperator(Agent):
 
     class CallForProposal(PeriodicBehaviour):
         async def run(self):
-            print("[{}]CallForProposal beh running".format(self.agent.name))
+            print("[{}] CallForProposal beh running".format(self.agent.name))
             
             # behaviour ReceiveOffers added before sending offers, to avoid missing offers
             ro = self.agent.ReceiveOffers()
@@ -36,6 +36,7 @@ class AuctionOperator(Agent):
                 msg = Message(to=to_jid)
                 msg.set_metadata("performative", "CFP")
                 msg.set_metadata("language", "json")
+                msg.set_metadata("sender", self.agent.name)
                 msg.body = json.dumps({"timestamp": "tu timestamp", "energy": "active"})
 
                 await self.send(msg)
@@ -43,7 +44,7 @@ class AuctionOperator(Agent):
     
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
-            print("[{}]ReceiveOffers beh running".format(self.agent.name))
+            print("[{}] ReceiveOffers beh running".format(self.agent.name))
             msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
             if msg:
                 print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
@@ -82,6 +83,7 @@ class AuctionOperator(Agent):
                 # Instantiate the message
                 msg = Message(to=to_jid)
                 msg.set_metadata("performative", "inform")
+                msg.set_metadata("sender", self.agent.name)
                 msg.body = "Siema byku !"
 
                 await self.send(msg)
