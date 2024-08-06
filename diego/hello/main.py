@@ -24,9 +24,9 @@ async def main():
     prd_byprint = Predictor(f"byprint_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, verify_security=False)
 
     # uruchamiamy tyle agentów DeviceManager ile urządzeń, wiążemy je (nazwą) z agentami Auctoinee
-    dm_pv      = DeviceManager(f"pv_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "pv_predictor"}, verify_security=False)
-    dm_bystar  = DeviceManager(f"bystar_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "bystar_predictor"}, verify_security=False)
-    dm_byprint = DeviceManager(f"byprint_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "byprint_predictor"}, verify_security=False)
+    dm_pv      = DeviceManager(f"pv_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "pv_predictor", "auctionee": "pv_auctionee"}, verify_security=False)
+    dm_bystar  = DeviceManager(f"bystar_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "bystar_predictor", "auctionee": "bystar_auctionee"}, verify_security=False)
+    dm_byprint = DeviceManager(f"byprint_device@{DEFAULT_HOST}", AGENT_PASSWORD, {"predictor": "byprint_predictor", "auctionee": "byprint_auctionee"}, verify_security=False)
     
     # uruchamiamy tyle agentów Auctionee ile urządzeń
     auc_pv = Auctionee(f"pv_auctionee@{DEFAULT_HOST}", AGENT_PASSWORD, {"active": "not_controllable", "reactive": "controllable", "device_manager": "pv_device"}, verify_security=False)

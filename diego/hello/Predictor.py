@@ -13,31 +13,28 @@ class Predictor(Agent):
         super().__init__(jid, password, verify_security)
         
     async def setup(self):
-        print("Agent {} started".format(self.name))
-        wfr = self.WaitForRequest()
+        print("[{}] started".format(self.name))
+        wfr = self.WaitForPredictOrder()
         self.add_behaviour(wfr)
 
-    class WaitForRequest(CyclicBehaviour):
+    class WaitForPredictOrder(CyclicBehaviour):
         async def run(self):
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
             msg = await self.receive(timeout=1)  # wait for a message for 1 seconds
             if msg:
-#                print("Message received with content: {}".format(msg.body))
-                self.agent.device_manager = msg.get_metadata("sender")
-                pp = self.agent.ProvidePrediction()
-                self.agent.add_behaviour(pp)
-    
-    class ProvidePrediction(OneShotBehaviour):
-        async def run(self):
-#            print("[{}]ProvidePrediction beh running".format(self.agent.name))
-           
-            # Instantiate the message
-            tojid = self.agent.device_manager
-            msg = Message(to=f"{tojid}@{DEFAULT_HOST}")
-            msg.set_metadata("performative", "inform")
-            msg.set_metadata("sender", self.agent.name)
-            msg.set_metadata("language", "json")
+                # [ProvidePrediction] from DeviceManager
+                #print("rec:  from:[{}] to: [{}] body: [{}]".format(msg.get_metadata("sender"), msg.to, msg.body))
+                tojid = msg.get_metadata("sender")
+                msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
+                msg_rply.set_metadata("performative", "inform")
+                msg_rply.set_metadata("sender", self.agent.name)
+                msg_rply.set_metadata("language", "json")
 
-            await self.send(msg)
-            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+                # Calculate prediction here...
+                # and put it into the message body
+                msg_rply.body = json.dumps({'2024-08-06T10:00:00': [121, 100, 410, 430, 200, 201]})
+
+                await self.send(msg)
+                print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
+    
         
