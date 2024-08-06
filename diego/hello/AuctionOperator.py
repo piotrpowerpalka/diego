@@ -38,10 +38,11 @@ class AuctionOperator(Agent):
                 msg.set_metadata("performative", "CFP")
                 msg.set_metadata("language", "json")
                 msg.set_metadata("sender", self.agent.name)
-                msg.body = json.dumps({"timestamp": "tu timestamp", "energy": "active"})
+                msg.body = json.dumps({"timestamp": "2024-08-06T10:00:00", "energy": "active"})
 
                 await self.send(msg)
-                print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+                print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
+
     
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
@@ -77,7 +78,6 @@ class AuctionOperator(Agent):
     
     class SendClearingInfo(OneShotBehaviour):
         async def run(self):
-            print("[{}] SendClearingInfo beh running".format(self.agent.jid))
             for curr_agent in self.agent.auctionee_list:
 
                 tojid = f"{curr_agent}@{DEFAULT_HOST}"
@@ -85,10 +85,10 @@ class AuctionOperator(Agent):
                 msg = Message(to=tojid)
                 msg.set_metadata("performative", "inform")
                 msg.set_metadata("sender", self.agent.name)
-                msg.body = "Siema byku !"
+                
 
                 await self.send(msg)
-                print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
+                print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
 
 
 

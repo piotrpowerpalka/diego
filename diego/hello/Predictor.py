@@ -20,7 +20,7 @@ class Predictor(Agent):
     class WaitForPredictOrder(CyclicBehaviour):
         async def run(self):
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
-            msg = await self.receive(timeout=1)  # wait for a message for 1 seconds
+            msg = await self.receive(timeout=10)  # wait for a message for 1 seconds
             if msg:
                 # [ProvidePrediction] from DeviceManager
                 #print("rec:  from:[{}] to: [{}] body: [{}]".format(msg.get_metadata("sender"), msg.to, msg.body))
@@ -34,7 +34,7 @@ class Predictor(Agent):
                 # and put it into the message body
                 msg_rply.body = json.dumps({'2024-08-06T10:00:00': [121, 100, 410, 430, 200, 201]})
 
-                await self.send(msg)
+                await self.send(msg_rply)
                 print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
     
         

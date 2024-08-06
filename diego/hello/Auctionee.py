@@ -15,8 +15,8 @@ class Auctionee(Agent):
         super().__init__(jid, password, verify_security)
         self.offer = {"volume": 10.0, "price": 25, "energy": 'active'}
         self.config = config
-        self.energy_type = 0
         self.device_manager = self.config["device_manager"]
+        self.auction_operator = self.config["auction_operator"]
         
     async def setup(self):
         print("{} Auctionee Agent started".format(self.name))
@@ -27,98 +27,65 @@ class Auctionee(Agent):
     class WaitForMessage(CyclicBehaviour):
         async def run(self):
             # print("[{}] WaitForCFP | WaitForClearningInfo | WaitForWorkingPoint|Bounds beh running".format(self.agent.name))
-            msg = await self.receive(timeout=1)  # wait for a message forever
+            msg = await self.receive(timeout=10)  # wait for a message forever
             if msg:
-                if (msg.get_metadata("performative") == 'CFP' and msg.get_metadata("sender") == 'auctionoperator'):
+                if (msg.get_metadata("performative") == 'CFP'):
                     # WaitForCFP...
                     msg_json = json.loads(msg.body)
-                    energy_type = msg_json['energy']
-
+                    energy_type = msg_json["energy"]
+                    
                     ctrl = self.agent.config[energy_type]
                     if (ctrl == "controllable"):
+                        # [GetWorkingPointBounds] - from Auctionee - send it to DeviceManager
                         self.energy_type = energy_type
-                        gwpb = self.agent.GetWorkingPointBounds()
-                        self.agent.add_behaviour(gwpb)
+                        tojid=self.agent.device_manager
+                        msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
+                        msg_rply.set_metadata("performative", "query")
+                        msg_rply.set_metadata("sender", self.agent.name)
+                        msg_rply.set_metadata("language", "json")
+                        msg_rply.body = json.dumps({"type": "working_point_bounds", "energy": msg_json['energy']})
+
+                        await self.send(msg_rply)
+                        print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
 
                     if (ctrl == "not_controllable"):
+                        # [GetWorkingPointInfo] - from Auctionee - send it to DeviceManager
                         self.energy_type = energy_type
-                        gwpi = self.agent.GetWorkingPointInfo()
-                        self.agent.add_behaviour(gwpi)
+                        tojid=self.agent.device_manager
+                        msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
+                        msg_rply.set_metadata("performative", "query")
+                        msg_rply.set_metadata("sender", self.agent.name)
+                        msg_rply.set_metadata("language", "json")
+                        msg_rply.body = json.dumps({"type": "working_point_info", "energy": msg_json['energy']})
+
+                        await self.send(msg_rply)
+                        print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
 
                 if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == self.agent.device_manager):
-                    # 
- #                   print("[{}] Message with Working point / bounds received: [{}]".format(self.agent.name, msg.body))
+                    tojid = self.agent.auction_operator
+                    msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
+                    msg_rply.set_metadata("performative", "propose")
+                    msg_rply.set_metadata("language", "json")
+                    msg_rply.body = json.dumps({"price": 100, "volume": -10})
+                
+                    await self.send(msg_rply)
+                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: AucitonOperator".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
 
-                    so = self.agent.SendOffer()
-                    self.agent.add_behaviour(so)
-
-                if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == 'auctionoperator'):
+                if (msg.get_metadata("performative") == 'inform' and msg.get_metadata("sender") == self.agent.auction_operator):
                     # WaitForClearingInfo...
 #                    print("[{}] Message with Clearing Info received: [{}]".format(self.agent.name, msg.body))
 
-                    swp = self.agent.SetWorkingPoint()       
-                    self.agent.add_behaviour(swp)            
-                # 
+                     # Instantiate the message
+                    tojid = self.agent.device_manager
+                    msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
+                    msg_rply.set_metadata("performative", "accept_offer")
+                    msg_rply.set_metadata("sender", self.agent.name)
+                    msg_rply.set_metadata("language", "json")  
+
+                    await self.send(msg_rply)
+                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: AucitonOperator".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
+                
 
                 
     
-    class SendOffer(OneShotBehaviour):
-        async def run(self):
-            print("[{}]SendOffer beh running".format(self.agent.name))
             
-            # Instantiate the message
-            tojid = f"auctionoperator@{DEFAULT_HOST}"
-            msg = Message(to=tojid)
-            msg.set_metadata("performative", "propose")
-            msg.set_metadata("language", "json")
-            msg.body = json.dumps(self.agent.offer)
-
-            await self.send(msg)
-            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
-            
-            wci = self.agent.WaitForClearingInfo()
-            self.agent.add_behaviour(wci)
-
-    class SetWorkingPoint(OneShotBehaviour):
-        async def run(self):
-            print("[{}]SetWorkingPoint beh running".format(self.agent.name))
-           
-            # Instantiate the message
-            tojid = self.agent.device_manager
-            msg = Message(to=f"{tojid}@{DEFAULT_HOST}")
-            msg.set_metadata("performative", "inform")
-            msg.set_metadata("sender", self.agent.name)
-            msg.set_metadata("language", "json")
-
-            await self.send(msg)
-            print("[{}][{}][{}]".format(self.agent.name, tojid, self.__class__.__name__))
-            
-
-    class GetWorkingPointInfo(OneShotBehaviour):
-        async def run(self):
-            print("[{}]GetWorkingPointInfo beh running".format(self.agent.name))
-           
-            # Instantiate the message
-            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
-            msg.set_metadata("performative", "query")
-            msg.set_metadata("sender", self.agent.name)
-            msg.set_metadata("language", "json")
-            msg.body = json.dumps({"energy": self.agent.energy_type})
-
-            await self.send(msg)
-            print("GetWorkingPointInfo sent by {} to  {}".format(self.agent.name, self.agent.device_manager))
-
-
-    class GetWorkingPointBounds(OneShotBehaviour):
-        async def run(self):
-            print("[{}]GetWorkingPointBounds beh running".format(self.agent.name))
-           
-            # Instantiate the message
-            msg = Message(to=f"{self.agent.device_manager}@{DEFAULT_HOST}")
-            msg.set_metadata("performative", "query")
-            msg.set_metadata("sender", self.agent.name)
-            msg.set_metadata("language", "json")
-            msg.body = json.dumps({"energy": self.agent.energy_type})
-
-            await self.send(msg)
-            print("GetWorkingPointBounds sent by {} to  {}".format(self.agent.name, self.agent.device_manager))

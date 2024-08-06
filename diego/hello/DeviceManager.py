@@ -41,7 +41,7 @@ class DeviceManager(Agent):
 
                 elif msg.get_metadata("performative") == "inform":
                     # [GetPrediction] - from predictor, send it to Auctionee
-                    print("rec:  from:[{}] to: [{}] body: [{}]".format(msg_rply.get_metadata("sender"), msg_rply.to, msg_rply.body))
+#                    print("rec:  from:[{}] to: [{}] body: [{}]".format(msg_rply.get_metadata("sender"), msg.to, msg.body))
 
                     tojid = self.agent.auctionee
                     msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
@@ -50,7 +50,7 @@ class DeviceManager(Agent):
                     msg_rply.set_metadata("language", "json")
 
                     await self.send(msg_rply)
-                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Predictor".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
+                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
 
         
 
