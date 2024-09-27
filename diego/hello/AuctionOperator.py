@@ -5,16 +5,21 @@ from spade.template import Template
 import time
 import datetime
 import json
+from functions import *
+from json import dumps
+from pandas import Timedelta
+
 
 DEFAULT_HOST = "server_hello"
 DT = "2024-01-02 00:00:00"
 
 class AuctionOperator(Agent):
     datetime = DT
+    
 
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
-        self.offers_list = []
+        self.offers_list = pd.DataFrame(data={'Datetime': [datetime]})
         #self.auctionee_list = self.config['auctionees']
         self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bysprint_auctionee']
 
@@ -54,7 +59,10 @@ class AuctionOperator(Agent):
             if msg:
 #                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
                 if (msg.get_metadata("language") == "json"):
-                    self.agent.offers_list.append(json.loads(msg.body))
+                    msg_json = json.loads(msg.body)
+                    print(msg_json)
+                    # self.agent.offers_list.append(json.loads(msg.body))
+
                 else:
                     raise TypeError 
 
