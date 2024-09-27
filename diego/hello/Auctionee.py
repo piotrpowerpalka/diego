@@ -7,6 +7,9 @@ from asyncio import sleep
 from datetime import datetime
 from aioxmpp.structs import LanguageRange as LR
 import json
+from functions import *
+from json import dumps
+from pandas import Timedelta
 
 DEFAULT_HOST = "server_hello"
 
@@ -32,31 +35,35 @@ class Auctionee(Agent):
                 if (msg.get_metadata("performative") == 'CFP'):
                     # WaitForCFP...
                     msg_json = json.loads(msg.body)
-                    energy_type = msg_json["energy"]
-                    
-                    ctrl = self.agent.config[energy_type]
+                    timestamp = msg_json["timestamp"]
+                    # ctrl = self.agent.config[energy_type]
+                    ctrl = self.agent.config["active"]
+
                     if (ctrl == "controllable"):
                         # [GetWorkingPointBounds] - from Auctionee - send it to DeviceManager
-                        self.energy_type = energy_type
+                        # self.energy_type = energy_type
                         tojid=self.agent.device_manager
                         msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
                         msg_rply.set_metadata("performative", "query")
                         msg_rply.set_metadata("sender", self.agent.name)
                         msg_rply.set_metadata("language", "json")
-                        msg_rply.body = json.dumps({"type": "working_point_bounds", "energy": msg_json['energy']})
+                        # msg_rply.body = json.dumps({"type": "working_point_bounds", "energy": msg_json['energy'], "timestamp": timestamp})
+                        msg_rply.body = json.dumps({"type": "working_point_bounds", "timestamp": timestamp})
+
 
                         await self.send(msg_rply)
                         print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
 
                     if (ctrl == "not_controllable"):
                         # [GetWorkingPointInfo] - from Auctionee - send it to DeviceManager
-                        self.energy_type = energy_type
+                        # self.energy_type = energy_type
                         tojid=self.agent.device_manager
                         msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
                         msg_rply.set_metadata("performative", "query")
                         msg_rply.set_metadata("sender", self.agent.name)
                         msg_rply.set_metadata("language", "json")
-                        msg_rply.body = json.dumps({"type": "working_point_info", "energy": msg_json['energy']})
+                        #msg_rply.body = json.dumps({"type": "working_point_info", "energy": msg_json['energy'], "timestamp": timestamp})
+                        msg_rply.body = json.dumps({"type": "working_point_info", "timestamp": timestamp})
 
                         await self.send(msg_rply)
                         print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
@@ -66,7 +73,7 @@ class Auctionee(Agent):
                     msg_rply = Message(to=f"{tojid}@{DEFAULT_HOST}")
                     msg_rply.set_metadata("performative", "propose")
                     msg_rply.set_metadata("language", "json")
-                    msg_rply.body = json.dumps({"price": 100, "volume": -10})
+                    msg_rply.body = msg.body
                 
                     await self.send(msg_rply)
                     print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: AucitonOperator".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))

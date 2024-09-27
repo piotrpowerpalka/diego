@@ -7,19 +7,22 @@ import datetime
 import json
 
 DEFAULT_HOST = "server_hello"
+DT = "2024-01-02 00:00:00"
 
 class AuctionOperator(Agent):
+    datetime = DT
+
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         self.offers_list = []
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bysprint_auctionee']
 
     async def setup(self):
         print("Agent {} started".format(self.name))
 
         start_at1 = datetime.datetime.now()
-        cfp = self.CallForProposal(period=60, start_at=start_at1)
+        cfp = self.CallForProposal(period=600, start_at=start_at1)
         self.add_behaviour(cfp)
 
     class CallForProposal(PeriodicBehaviour):
@@ -38,7 +41,7 @@ class AuctionOperator(Agent):
                 msg.set_metadata("performative", "CFP")
                 msg.set_metadata("language", "json")
                 msg.set_metadata("sender", self.agent.name)
-                msg.body = json.dumps({"timestamp": "2024-08-06T10:00:00", "energy": "active"})
+                msg.body = json.dumps({"timestamp": self.agent.datetime})
 
                 await self.send(msg)
                 print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
@@ -47,7 +50,7 @@ class AuctionOperator(Agent):
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
             # print("[{}] ReceiveOffers beh running".format(self.agent.name))
-            msg = await self.receive(timeout=10)  # wait for a message for 10 seconds
+            msg = await self.receive(timeout=300)  # wait for a message for 300 seconds
             if msg:
 #                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
                 if (msg.get_metadata("language") == "json"):

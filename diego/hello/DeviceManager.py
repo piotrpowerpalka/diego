@@ -5,6 +5,9 @@ from spade.template import Template
 import time
 import datetime
 import json
+from functions import *
+from json import dumps
+from pandas import Timedelta
 
 DEFAULT_HOST = "server_hello"
 
@@ -23,7 +26,7 @@ class DeviceManager(Agent):
     class WaitForRequest(CyclicBehaviour):
         async def run(self):
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
-            msg = await self.receive(timeout=1)  # wait for a message for 1 seconds
+            msg = await self.receive(timeout=10)  # wait for a message for 1 seconds
             if msg:
 #                print("[{}] Message received with content: {}".format(self.agent.name, msg.body))
                 if msg.get_metadata("performative") == "query":
@@ -35,6 +38,8 @@ class DeviceManager(Agent):
                     msg_rply.set_metadata("performative", "query")
                     msg_rply.set_metadata("sender", self.agent.name)
                     msg_rply.set_metadata("language", "json")
+
+                    msg_rply.body = msg.body
 
                     await self.send(msg_rply)
                     print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Predictor".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
@@ -48,6 +53,8 @@ class DeviceManager(Agent):
                     msg_rply.set_metadata("performative", "inform")
                     msg_rply.set_metadata("sender", self.agent.name)
                     msg_rply.set_metadata("language", "json")
+
+                    msg_rply.body = msg.body
 
                     await self.send(msg_rply)
                     print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
