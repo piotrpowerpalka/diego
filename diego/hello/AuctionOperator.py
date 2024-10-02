@@ -20,10 +20,12 @@ class AuctionOperator(Agent):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bysprint_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bysprint_auctionee', 'eh_auctionee', 'mazak_auctionee']
 
         self.offers_list = pd.DataFrame()
         self.roles       = pd.DataFrame(columns=['flow', 'role', 'energy', 'price', 'device'])
+        self.bounds      = pd.DataFrame(columns=["energy", "min", "max"])
+
         self.forecast    = pd.DataFrame()
 
 
@@ -89,12 +91,16 @@ class AuctionOperator(Agent):
                     self.agent.offers_list.insert(1, msg_json["device"] + "_P", msg_json["active_power"]["value"])
                     self.agent.offers_list.insert(1, msg_json["device"] + "_Q", msg_json["reactive_power"]["value"])
 
-                    self.agent.roles.loc[-1] = [msg_json["device"] + "_Ep", msg_json["active_power"]["role"], 'Ep', msg_json["active_power"]['price'], msg_json["device"]]
-                    self.agent.roles.loc[-1] = [msg_json["device"] + "_Eq", msg_json["reactive_power"]["role"], 'Eq', msg_json["reactive_power"]['price'], msg_json["device"]]
-                
+                    self.agent.roles.loc[self.agent.roles.shape[0]] = [msg_json["device"] + "_Ep", msg_json["active_power"]["role"], 'Ep', msg_json["active_power"]['price'], msg_json["device"]]
+                    self.agent.roles.loc[self.agent.roles.shape[0]] = [msg_json["device"] + "_Eq", msg_json["reactive_power"]["role"], 'Eq', msg_json["reactive_power"]['price'], msg_json["device"]]
+
+                    self.agent.bounds.loc[self.agent.bounds.shape[0]] = [msg_json["device"] + "_P", msg_json["active_power"]["bounds"]["min"], msg_json["active_power"]["bounds"]["max"]]
+                    self.agent.bounds.loc[self.agent.bounds.shape[0]] = [msg_json["device"] + "_Q", msg_json["reactive_power"]["bounds"]["min"], msg_json["reactive_power"]["bounds"]["max"]]
 
                     print("AO offers list: {}".format(self.agent.offers_list))
-                    print("AO roles list: {}".format(self.agent.roles))
+                    print("AO roles  list: {}".format(self.agent.roles))
+                    print("AO bounds list: {}".format(self.agent.bounds))
+                    
                     
                     # self.agent.offers_list.append(json.loads(msg.body))
 
