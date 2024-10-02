@@ -4,18 +4,16 @@ from pandas import read_excel, read_csv
 from classes import Balancer
 
 
-def read_input_data(Pname, Qname):
+def read_input_data(name):
     print("read_input_data... preparing")
-    data = read_csv("MAS_tests_input_data_red.csv", sep=";")
-    print("read_input_data... MAS_tests_input_data_red.xlsx: {}".format(data))
-
+    data = read_csv("input_data_{}.csv".format(name), sep=";")
     bounds = read_csv('bounds.csv')
     print("read_input_data... bounds.xlsx")
     roles = read_csv('roles.csv')
     print("read_input_data... roles.xlsx")
     data = data.iloc[2:, :].reset_index(drop=True)
     print("read_input_data... readed")
-    return data[["Datetime", Pname, Qname]], bounds, roles
+    return data[["Datetime", "{}_P".format(name), "{}_Q".format(name)]], bounds, roles
 
 
 def balance(drow, limits, roles, forecast):

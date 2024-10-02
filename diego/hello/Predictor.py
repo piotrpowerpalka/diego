@@ -21,7 +21,9 @@ class Predictor(Agent):
     def __init__(self, jid: str, password: str, prefix: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         self.prefix = prefix
-        
+        # read data from csv
+        self.inp = pd.read_csv("input_data_{}.csv".format(self.prefix), sep=";")
+
     async def setup(self):
         print("[{}] started".format(self.name))
         wfr = self.WaitForPredictOrder()
@@ -29,19 +31,19 @@ class Predictor(Agent):
 
     ''' funkcja getPrediction - do przepisania przez Electrum'''
     def getPrediction(self, datetime):
-        # read data from xlsx - to substitute
-        self.inp, self.limits, self.roles = read_input_data(self.prefix+"_P", self.prefix+"_Q")
+        # read data from csv - to substitute
+        
         # Calculate prediction here...
         wanted_date = pd.to_datetime(datetime)
         wanted_ind = self.inp[self.inp['Datetime'] == datetime]
+        print(wanted_ind)
 #        row = self.inp.loc[wanted_ind, :]
 #        act_time = row.loc['Datetime']
 #        print("acttime: {}".format(act_time) )
 
 #        forecast = self.inp[self.inp['Datetime'] == (pd.to_datetime(act_time) - Timedelta('15min'))]
 #        return json.dumps({DATETIME: [forecast[self.name + "_P"], forecast[self.name + "_Q"]]})
-        return {datetime: [wanted_ind.iat[0, 1], wanted_ind.iat[0, 2] ]}
-
+        return {"device": self.prefix, "date": datetime, "P": wanted_ind.iat[0, 2], "Q": wanted_ind.iat[0, 3] }
 
     class WaitForPredictOrder(CyclicBehaviour):
         async def run(self):
@@ -67,6 +69,7 @@ class Predictor(Agent):
 
                 await self.send(msg_rply)
                 print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: DeviceManager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
+    
 
     
 

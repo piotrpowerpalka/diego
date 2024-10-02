@@ -19,6 +19,12 @@ services:
     image: spade_hello:latest
     deploy:
       resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 100M
+#        reservations:
+#          cpus: '0.25'
+#          memory: 75M
         limits:
           cpus: ${CPUS}
           memory: ${MEMORY}
