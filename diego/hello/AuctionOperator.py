@@ -20,7 +20,7 @@ class AuctionOperator(Agent):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee', 'sg1_auctionee', 'sg2_auctionee', 'sg3_auctionee', 'sg4_auctionee']
 
         self.offers_list = pd.DataFrame()
         self.forecast    = pd.DataFrame()
