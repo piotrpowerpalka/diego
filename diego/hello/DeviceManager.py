@@ -28,6 +28,31 @@ class DeviceManager(Agent):
         wfr = self.WaitForRequest()
         self.add_behaviour(wfr)
 
+
+    def getBounds(self):
+        json_bounds = {}
+
+        for c in range(self.bounds.shape[1]): # cols
+            attr = []
+            for r in range(self.bounds.shape[0]): # rows
+                attr.append(str(self.bounds.iat[r,c]))
+            json_bounds[self.bounds.columns[c]] = attr
+
+        return json_bounds
+
+    def getRoles(self):
+        json_roles = {}
+
+        for c in range(self.roles.shape[1]): # cols
+            attr = []
+            for r in range(self.roles.shape[0]): # rows
+                attr.append(str(self.roles.iat[r,c]))
+            json_roles[self.roles.columns[c]] = attr
+
+        print(json_roles)
+
+        return json_roles
+
     class WaitForRequest(CyclicBehaviour):
         async def run(self):
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
@@ -61,20 +86,14 @@ class DeviceManager(Agent):
 
                     body_json = json.loads(msg.body)
 
+                    
                     print(self.agent.roles)
                     print(self.agent.bounds)
 
-                    priceP = self.agent.roles.iat[0, 3]
-                    priceQ = self.agent.roles.iat[1, 3]
-                    roleP  = self.agent.roles.iat[0, 1]
-                    roleQ  = self.agent.roles.iat[1, 1]
-                    minP   = self.agent.bounds.iat[0, 1]
-                    minQ   = self.agent.bounds.iat[1, 1]
-                    maxP   = self.agent.bounds.iat[0, 2]
-                    maxQ   = self.agent.bounds.iat[1, 2]
+                    json_prices = self.agent.getRoles()
+                    json_bounds = self.agent.getBounds()
                     
-                    
-                    rply_body_json = {"device": body_json["device"], "date": body_json["date"],  "active_power": {"bounds": {"min": str(minP), "max": str(maxP)}, "value": body_json["P"], "price": str(priceP), "role": str(roleP)} , "reactive_power": {"bounds": {"min": str(minQ), "max": str(maxQ)}, "value": body_json["Q"], "price": str(priceQ), "role": str(roleQ)}}
+                    rply_body_json = {"device": body_json["device"], "workpoint": body_json["workpoint"], "forecast": body_json["forecast"], "prices": json_prices, "bounds": json_bounds}
                     
                     msg_rply.body = json.dumps(rply_body_json)
 

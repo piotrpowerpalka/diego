@@ -32,18 +32,21 @@ class Predictor(Agent):
     ''' funkcja getPrediction - do przepisania przez Electrum'''
     def getPrediction(self, datetime):
         # read data from csv - to substitute
-        
         # Calculate prediction here...
-        wanted_date = pd.to_datetime(datetime)
-        wanted_ind = self.inp[self.inp['Datetime'] == datetime]
-        print(wanted_ind)
-#        row = self.inp.loc[wanted_ind, :]
-#        act_time = row.loc['Datetime']
-#        print("acttime: {}".format(act_time) )
+        forecast_date = str(pd.to_datetime(datetime) - Timedelta('15min'))
+        workpoint  = self.inp[self.inp['Datetime'] == datetime]
+        forecast   = self.inp[self.inp['Datetime'] == forecast_date]
+        
+        json_wp = {}        # json z punktem pracy
+        json_fc = {}        # json z predykcją
 
-#        forecast = self.inp[self.inp['Datetime'] == (pd.to_datetime(act_time) - Timedelta('15min'))]
-#        return json.dumps({DATETIME: [forecast[self.name + "_P"], forecast[self.name + "_Q"]]})
-        return {"device": self.prefix, "date": datetime, "P": wanted_ind.iat[0, 2], "Q": wanted_ind.iat[0, 3] }
+        for r in range(1, workpoint.shape[1]):
+            json_wp[workpoint.columns[r]] = str(workpoint.iat[0,r])
+
+        for rf in range(1, forecast.shape[1]):
+            json_fc[forecast.columns[rf]] = str(forecast.iat[0,rf])
+        
+        return {"device": self.prefix, "workpoint": json_wp, "forecast": json_fc}
 
     class WaitForPredictOrder(CyclicBehaviour):
         async def run(self):

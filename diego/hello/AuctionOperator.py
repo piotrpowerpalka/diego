@@ -20,14 +20,13 @@ class AuctionOperator(Agent):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bysprint_auctionee', 'eh_auctionee', 'mazak_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee']
 
         self.offers_list = pd.DataFrame()
+        self.forecast    = pd.DataFrame()
         self.roles       = pd.DataFrame(columns=['flow', 'role', 'energy', 'price', 'device'])
         self.bounds      = pd.DataFrame(columns=["energy", "min", "max"])
-
-        self.forecast    = pd.DataFrame()
-
+        
 
     async def setup(self):
         print("Agent {} started".format(self.name))
@@ -62,6 +61,7 @@ class AuctionOperator(Agent):
             self.agent.add_behaviour(ro)
 
             self.agent.offers_list = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
+            self.agent.forecast    = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
 
             for curr_agent in self.agent.auctionee_list:
 
@@ -87,22 +87,44 @@ class AuctionOperator(Agent):
                     msg_json = json.loads(msg.body)
                     print("AO, otrzymano: {}".format(msg_json))
 
+                    for wpk in msg_json["workpoint"]:
+                        if wpk != 'Datetime':
+                            self.agent.offers_list.insert(1, wpk, msg_json["workpoint"][wpk])
+
+                    for fck in msg_json["forecast"]:
+                        if fck != 'Datetime':
+                            self.agent.forecast.insert(1, fck, msg_json["forecast"][fck])
+
+                    flow = []
+                    role = []
+                    energy = []
+                    price = []
+                    device = []
+
+                    for pk in msg_json["prices"]["flow"]:   flow.append(pk)
+                    for pk in msg_json["prices"]["role"]:   role.append(pk)
+                    for pk in msg_json["prices"]["energy"]: energy.append(pk)
+                    for pk in msg_json["prices"]["price"]:  price.append(pk)
+                    for pk in msg_json["prices"]["device"]: device.append(pk)
+
+                    for i in range(len(flow)):
+                        self.agent.roles.loc[self.agent.roles.shape[0]] = [flow[i], role[i], energy[i], price[i], device[i]]
+
+                    en = []
+                    min = []
+                    max = []
                     
-                    self.agent.offers_list.insert(1, msg_json["device"] + "_P", msg_json["active_power"]["value"])
-                    self.agent.offers_list.insert(1, msg_json["device"] + "_Q", msg_json["reactive_power"]["value"])
+                    for pk in msg_json["bounds"]["Unnamed: 0"]:   en.append(pk)
+                    for pk in msg_json["bounds"]["min"]:          min.append(pk)
+                    for pk in msg_json["bounds"]["max"]:          max.append(pk)
 
-                    self.agent.roles.loc[self.agent.roles.shape[0]] = [msg_json["device"] + "_Ep", msg_json["active_power"]["role"], 'Ep', msg_json["active_power"]['price'], msg_json["device"]]
-                    self.agent.roles.loc[self.agent.roles.shape[0]] = [msg_json["device"] + "_Eq", msg_json["reactive_power"]["role"], 'Eq', msg_json["reactive_power"]['price'], msg_json["device"]]
-
-                    self.agent.bounds.loc[self.agent.bounds.shape[0]] = [msg_json["device"] + "_P", msg_json["active_power"]["bounds"]["min"], msg_json["active_power"]["bounds"]["max"]]
-                    self.agent.bounds.loc[self.agent.bounds.shape[0]] = [msg_json["device"] + "_Q", msg_json["reactive_power"]["bounds"]["min"], msg_json["reactive_power"]["bounds"]["max"]]
+                    for i in range(len(en)):
+                        self.agent.bounds.loc[self.agent.bounds.shape[0]] = [en[i], min[i], max[i]]
 
                     print("AO offers list: {}".format(self.agent.offers_list))
                     print("AO roles  list: {}".format(self.agent.roles))
                     print("AO bounds list: {}".format(self.agent.bounds))
-                    
-                    
-                    # self.agent.offers_list.append(json.loads(msg.body))
+                    print("AO forecase list: {}".format(self.agent.forecast))
 
                 else:
                     raise TypeError 
@@ -115,7 +137,7 @@ class AuctionOperator(Agent):
                 self.kill()
             
         async def on_end(self):
-            cl = self.agent.Clear()
+            cl = self.agent.Clear(self)
             self.agent.add_behaviour(cl)
 
 
@@ -124,11 +146,16 @@ class AuctionOperator(Agent):
             print("[{}]Clear beh running".format(self.agent.name))
             # insert code for clearing the offers
 
-            (state_comp_frame, blocked_devs, res_supp_devs, wp) = balance(self.offers_list, self.roles. self.forecast)
+            (state_comp_frame, blocked_devs, res_supp_devs, wp) = balance(self.agent.offers_list, self.agent.roles. self.agent.forecast)
 
             sci = self.agent.SendClearingInfo()
             self.agent.add_behaviour(sci)
 
+            # clear data after balancing
+            self.offers_list = pd.DataFrame()
+            self.forecast    = pd.DataFrame()
+            self.roles       = pd.DataFrame(columns=['flow', 'role', 'energy', 'price', 'device'])
+            self.bounds      = pd.DataFrame(columns=["energy", "min", "max"])
     
     class SendClearingInfo(OneShotBehaviour):
         async def run(self):
