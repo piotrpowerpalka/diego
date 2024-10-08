@@ -20,7 +20,7 @@ class AuctionOperator(Agent):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee', 'sg1_auctionee', 'sg2_auctionee', 'sg3_auctionee', 'sg4_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bysprint_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee', 'sg1_auctionee', 'sg2_auctionee', 'sg3_auctionee', 'sg4_auctionee', 'evcs_auctionee', 'SOC_auctionee', 'sg1prim_auctionee', 'MS_auctionee', 'network_auctionee']
 
         self.offers_list = pd.DataFrame()
         self.forecast    = pd.DataFrame()
@@ -32,7 +32,7 @@ class AuctionOperator(Agent):
         print("Agent {} started".format(self.name))
 
         start_at1 = datetime.datetime.now()
-        cfp = self.CallForProposal(period=60, start_at=start_at1)
+        cfp = self.CallForProposal(period=600, start_at=start_at1)
         self.add_behaviour(cfp)
 
     def balance(drow, limits, roles, forecast):
@@ -80,7 +80,7 @@ class AuctionOperator(Agent):
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
             # print("[{}] ReceiveOffers beh running".format(self.agent.name))
-            msg = await self.receive(timeout=20)  # wait for a message for 300 seconds
+            msg = await self.receive(timeout=300)  # wait for a message for 300 seconds
             if msg:
 #                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
                 if (msg.get_metadata("language") == "json"):
@@ -124,7 +124,7 @@ class AuctionOperator(Agent):
                     print("AO offers list: {}".format(self.agent.offers_list))
                     print("AO roles  list: {}".format(self.agent.roles))
                     print("AO bounds list: {}".format(self.agent.bounds))
-                    print("AO forecase list: {}".format(self.agent.forecast))
+                    print("AO forecast list: {}".format(self.agent.forecast))
 
                 else:
                     raise TypeError 

@@ -56,7 +56,7 @@ class DeviceManager(Agent):
     class WaitForRequest(CyclicBehaviour):
         async def run(self):
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
-            msg = await self.receive(timeout=10)  # wait for a message for 1 seconds
+            msg = await self.receive(timeout=120)  # wait for a message for 1 seconds
             if msg:
 #                print("[{}] Message received with content: {}".format(self.agent.name, msg.body))
                 if msg.get_metadata("performative") == "query":

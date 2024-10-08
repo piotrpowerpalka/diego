@@ -36,15 +36,19 @@ class Predictor(Agent):
         forecast_date = str(pd.to_datetime(datetime) - Timedelta('15min'))
         workpoint  = self.inp[self.inp['Datetime'] == datetime]
         forecast   = self.inp[self.inp['Datetime'] == forecast_date]
-        
+
         json_wp = {}        # json z punktem pracy
         json_fc = {}        # json z predykcją
 
-        for r in range(1, workpoint.shape[1]):
-            json_wp[workpoint.columns[r]] = str(workpoint.iat[0,r])
+        print("pv[{}] shape:{}x{}".format(self.prefix, workpoint.shape[0], workpoint.shape[1]))
 
-        for rf in range(1, forecast.shape[1]):
-            json_fc[forecast.columns[rf]] = str(forecast.iat[0,rf])
+        if (workpoint.shape[1] >= 1 and workpoint.shape[0] > 0):
+            for r in range(1, workpoint.shape[1]):
+                json_wp[workpoint.columns[r]] = str(workpoint.iat[0,r])
+
+        if (forecast.shape[1] >= 1 and forecast.shape[0] > 0):
+            for rf in range(1, forecast.shape[1]):
+                json_fc[forecast.columns[rf]] = str(forecast.iat[0,rf])
         
         return {"device": self.prefix, "workpoint": json_wp, "forecast": json_fc}
 
@@ -52,7 +56,7 @@ class Predictor(Agent):
         async def run(self):
             
             # print("[{}]WaitForRequest beh running".format(self.agent.name))
-            msg = await self.receive(timeout=10)  # wait for a message for 1 seconds
+            msg = await self.receive(timeout=120)  # wait for a message for 1 seconds
             if msg:
                 msg_json = json.loads(msg.body)
                 datetime = msg_json["timestamp"]

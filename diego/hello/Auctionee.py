@@ -30,7 +30,7 @@ class Auctionee(Agent):
     class WaitForMessage(CyclicBehaviour):
         async def run(self):
             # print("[{}] WaitForCFP | WaitForClearningInfo | WaitForWorkingPoint|Bounds beh running".format(self.agent.name))
-            msg = await self.receive(timeout=10)  # wait for a message forever
+            msg = await self.receive(timeout=120)  # wait for a message forever
             if msg:
                 if (msg.get_metadata("performative") == 'CFP'):
                     # WaitForCFP...
