@@ -8,6 +8,7 @@ import json
 from functions import *
 from json import dumps
 from pandas import Timedelta
+from classes import *
 
 
 DEFAULT_HOST = "server_hello"
@@ -20,13 +21,13 @@ class AuctionOperator(Agent):
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
         #self.auctionee_list = self.config['auctionees']
-        self.auctionee_list = ['pv_auctionee', 'bysprint_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee', 'sg1_auctionee', 'sg2_auctionee', 'sg3_auctionee', 'sg4_auctionee', 'evcs_auctionee', 'SOC_auctionee', 'sg1prim_auctionee', 'MS_auctionee', 'network_auctionee']
+        self.auctionee_list = ['pv_auctionee', 'bysprint_auctionee', 'bystar1_auctionee', 'bystar2_auctionee', 'mazak_auctionee', 'eh_auctionee', 'inv1_auctionee', 'inv2_auctionee', 'sg1_auctionee', 'sg2_auctionee', 'sg3_auctionee', 'sg4_auctionee', 'evcs_auctionee', 'soc_auctionee', 'sg1prim_auctionee', 'ms_auctionee', 'network_auctionee']
 
         self.offers_list = pd.DataFrame()
         self.forecast    = pd.DataFrame()
         self.roles       = pd.DataFrame(columns=['flow', 'role', 'energy', 'price', 'device'])
         self.bounds      = pd.DataFrame(columns=["energy", "min", "max"])
-        
+        self.agentsAns   = []        
 
     async def setup(self):
         print("Agent {} started".format(self.name))
@@ -85,6 +86,9 @@ class AuctionOperator(Agent):
 #                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
                 if (msg.get_metadata("language") == "json"):
                     msg_json = json.loads(msg.body)
+
+                    self.agent.agentsAns.append(msg_json["device"])
+
                     print("AO, otrzymano: {}".format(msg_json))
 
                     for wpk in msg_json["workpoint"]:
@@ -129,7 +133,7 @@ class AuctionOperator(Agent):
                 else:
                     raise TypeError 
 
-                if (len(self.agent.offers_list) == len(self.agent.auctionee_list)):
+                if (len(self.agent.agentsAns) == len(self.agent.auctionee_list)):
                     self.kill()
 
             else:
@@ -137,16 +141,17 @@ class AuctionOperator(Agent):
                 self.kill()
             
         async def on_end(self):
-            cl = self.agent.Clear(self)
-            self.agent.add_behaviour(cl)
-
+#            cl = self.agent.Clear()
+#            self.agent.add_behaviour(cl)
+            print("[{}]Clear beh running".format(self.agent.name))
+            (state_comp_frame, blocked_devs, res_supp_devs, wp) = self.agent.balance(self.agent.offers_list, self.agent.bounds, self.agent.roles, self.agent.forecast)
 
     class Clear(OneShotBehaviour):
         async def run(self):
             print("[{}]Clear beh running".format(self.agent.name))
             # insert code for clearing the offers
 
-            (state_comp_frame, blocked_devs, res_supp_devs, wp) = balance(self.agent.offers_list, self.agent.roles. self.agent.forecast)
+            (state_comp_frame, blocked_devs, res_supp_devs, wp) = self.agent.balance(self.agent.offers_list, self.agent.bounds, self.agent.roles. self.agent.forecast)
 
             sci = self.agent.SendClearingInfo()
             self.agent.add_behaviour(sci)

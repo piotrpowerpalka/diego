@@ -14,7 +14,7 @@ import os
 import asyncio
 
 DEFAULT_HOST = "server_hello"
-AGENT_PASSWORD = "123456789"
+AGENT_PASSWORD = "electrum1@3"
 
 
 async def main():
@@ -32,9 +32,9 @@ async def main():
     prd_sg3     = Predictor(f"sg3_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "sg3", verify_security=False)
     prd_sg4     = Predictor(f"sg4_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "sg4", verify_security=False)
     prd_evcs    = Predictor(f"evcs_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "evcs", verify_security=False)
-    prd_SOC     = Predictor(f"SOC_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "soc", verify_security=False)
+    prd_SOC     = Predictor(f"soc_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "soc", verify_security=False)
     prd_sg1prim = Predictor(f"sg1prim_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "sg1prim", verify_security=False)
-    prd_MS      = Predictor(f"MS_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "ms", verify_security=False)
+    prd_MS      = Predictor(f"ms_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "ms", verify_security=False)
     prd_network = Predictor(f"network_predictor@{DEFAULT_HOST}", AGENT_PASSWORD, "network", verify_security=False)
     
     # uruchamiamy tyle agentów DeviceManager ile urządzeń, wiążemy je (nazwą) z agentami Auctoinee
@@ -51,9 +51,9 @@ async def main():
     dm_sg3     = DeviceManager(f"sg3_device@{DEFAULT_HOST}",       AGENT_PASSWORD, "sg3", {"predictor": "sg3_predictor", "auctionee": "sg3_auctionee"}, verify_security=False)
     dm_sg4     = DeviceManager(f"sg4_device@{DEFAULT_HOST}",       AGENT_PASSWORD, "sg4", {"predictor": "sg4_predictor", "auctionee": "sg4_auctionee"}, verify_security=False)
     dm_evcs    = DeviceManager(f"evcs_device@{DEFAULT_HOST}",      AGENT_PASSWORD, "evcs", {"predictor": "evcs_predictor", "auctionee": "evcs_auctionee"}, verify_security=False)
-    dm_SOC     = DeviceManager(f"SOC_device@{DEFAULT_HOST}",       AGENT_PASSWORD, "soc", {"predictor": "SOC_predictor", "auctionee": "SOC_auctionee"}, verify_security=False)
+    dm_SOC     = DeviceManager(f"soc_device@{DEFAULT_HOST}",       AGENT_PASSWORD, "soc", {"predictor": "soc_predictor", "auctionee": "soc_auctionee"}, verify_security=False)
     dm_sg1prim = DeviceManager(f"sg1prim_device@{DEFAULT_HOST}",   AGENT_PASSWORD, "sg1prim", {"predictor": "sg1prim_predictor", "auctionee": "sg1prim_auctionee"}, verify_security=False)
-    dm_MS      = DeviceManager(f"MS_device@{DEFAULT_HOST}",        AGENT_PASSWORD, "ms", {"predictor": "MS_predictor", "auctionee": "MS_auctionee"}, verify_security=False)
+    dm_MS      = DeviceManager(f"ms_device@{DEFAULT_HOST}",        AGENT_PASSWORD, "ms", {"predictor": "ms_predictor", "auctionee": "ms_auctionee"}, verify_security=False)
     dm_network = DeviceManager(f"network_device@{DEFAULT_HOST}",        AGENT_PASSWORD, "network", {"predictor": "network_predictor", "auctionee": "network_auctionee"}, verify_security=False)
     
     # uruchamiamy tyle agentów Auctionee ile urządzeń
@@ -70,9 +70,9 @@ async def main():
     auc_sg3       = Auctionee(f"sg3_auctionee@{DEFAULT_HOST}",      AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "sg3_device", "auction_operator": "auction_operator"}, verify_security=False)
     auc_sg4       = Auctionee(f"sg4_auctionee@{DEFAULT_HOST}",      AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "sg4_device", "auction_operator": "auction_operator"}, verify_security=False)
     auc_evcs      = Auctionee(f"evcs_auctionee@{DEFAULT_HOST}",     AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "evcs_device", "auction_operator": "auction_operator"}, verify_security=False)
-    auc_SOC       = Auctionee(f"SOC_auctionee@{DEFAULT_HOST}",      AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "SOC_device", "auction_operator": "auction_operator"}, verify_security=False)
+    auc_SOC       = Auctionee(f"soc_auctionee@{DEFAULT_HOST}",      AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "soc_device", "auction_operator": "auction_operator"}, verify_security=False)
     auc_sg1prim   = Auctionee(f"sg1prim_auctionee@{DEFAULT_HOST}",  AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "sg1prim_device", "auction_operator": "auction_operator"}, verify_security=False)
-    auc_MS        = Auctionee(f"MS_auctionee@{DEFAULT_HOST}",       AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "MS_device", "auction_operator": "auction_operator"}, verify_security=False)
+    auc_MS        = Auctionee(f"ms_auctionee@{DEFAULT_HOST}",       AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "ms_device", "auction_operator": "auction_operator"}, verify_security=False)
     auc_network   = Auctionee(f"network_auctionee@{DEFAULT_HOST}",  AGENT_PASSWORD, {"active": "not_controllable", "reactive": "not_controllable", "device_manager": "network_device", "auction_operator": "auction_operator"}, verify_security=False)
 
     #ao = AuctionOperator(f"auctionoperator@{DEFAULT_HOST}", AGENT_PASSWORD, {"auctionees: ['pv_auctionee', 'bystar_auctionee', 'byprint_auctionee']"}, verify_security=False)
