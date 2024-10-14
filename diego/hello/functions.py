@@ -4,6 +4,15 @@ from pandas import read_excel, read_csv
 from classes import Balancer
 
 
+def read_data():
+    print("read_input_data... preparing")
+    data = pd.read_csv("MAS_tests_input_data_red.csv", sep=";")
+    data = data.iloc[2:, :].reset_index(drop=True)
+    bounds = pd.read_csv('bounds.csv', sep=";", index_col=0)
+    roles = pd.read_csv('roles.csv', sep=";")
+    return data, bounds, roles
+
+
 def read_input_data(name):
     print("read_input_data... preparing")
     data = read_csv("input_data_{}.csv".format(name), sep=";")

@@ -10,4 +10,5 @@ RUN pip install openpyxl
 RUN pip install xlrd
 
 RUN chmod +x main.py
+#RUN tail -f /dev/null
 CMD python -u main.py

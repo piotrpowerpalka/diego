@@ -36,11 +36,14 @@ class AuctionOperator(Agent):
         cfp = self.CallForProposal(period=600, start_at=start_at1)
         self.add_behaviour(cfp)
 
-    def balance(drow, limits, roles, forecast):
-        per_balancer = Balancer(drow, limits, roles, forecast)
+    async def balance(self):
+        print("balancing 0111")
+        per_balancer = Balancer(self.offers_list, self.bounds, self.roles, self.forecast)
         per_balancer.calc_fix_dem()
         (old_states, Ems_new_obs, Ems_new_pred, en_deltas,
         wp, autocons, tgs, blocked_devs, res_supp_devs) = per_balancer.balancing()
+
+        print("balancing 111")
 
         state_comp_frame = pd.concat([old_states, Ems_new_pred,  Ems_new_pred-old_states])
         state_comp_frame.index = ['old', 'new', 'diff']
@@ -125,15 +128,16 @@ class AuctionOperator(Agent):
                     for i in range(len(en)):
                         self.agent.bounds.loc[self.agent.bounds.shape[0]] = [en[i], min[i], max[i]]
 
-                    print("AO offers list: {}".format(self.agent.offers_list))
-                    print("AO roles  list: {}".format(self.agent.roles))
-                    print("AO bounds list: {}".format(self.agent.bounds))
-                    print("AO forecast list: {}".format(self.agent.forecast))
+                    #print("AO offers list: {}".format(self.agent.offers_list))
+                    #print("AO roles  list: {}".format(self.agent.roles))
+                    #print("AO bounds list: {}".format(self.agent.bounds))
+                    #print("AO forecast list: {}".format(self.agent.forecast))
 
                 else:
                     raise TypeError 
 
                 if (len(self.agent.agentsAns) == len(self.agent.auctionee_list)):
+                    print("balancing 000")
                     self.kill()
 
             else:
@@ -144,7 +148,7 @@ class AuctionOperator(Agent):
 #            cl = self.agent.Clear()
 #            self.agent.add_behaviour(cl)
             print("[{}]Clear beh running".format(self.agent.name))
-            (state_comp_frame, blocked_devs, res_supp_devs, wp) = self.agent.balance(self.agent.offers_list, self.agent.bounds, self.agent.roles, self.agent.forecast)
+            (state_comp_frame, blocked_devs, res_supp_devs, wp) = await self.agent.balance()
 
     class Clear(OneShotBehaviour):
         async def run(self):

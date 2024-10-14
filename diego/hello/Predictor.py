@@ -55,7 +55,7 @@ class Predictor(Agent):
     class WaitForPredictOrder(CyclicBehaviour):
         async def run(self):
             
-            # print("[{}]WaitForRequest beh running".format(self.agent.name))
+            print("[{}]WaitForRequest beh running".format(self.agent.name))
             msg = await self.receive(timeout=120)  # wait for a message for 1 seconds
             if msg:
                 msg_json = json.loads(msg.body)
