@@ -6,8 +6,8 @@ COPY . /app
 RUN pip install spade
 RUN pip install numpy
 RUN pip install pandas
-RUN pip install openpyxl
-RUN pip install xlrd
+#RUN pip install openpyxl
+#RUN pip install xlrd
 
 RUN chmod +x main.py
 #RUN tail -f /dev/null

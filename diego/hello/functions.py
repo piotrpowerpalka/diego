@@ -1,15 +1,37 @@
 import numpy as np
 import pandas as pd
-from pandas import read_excel, read_csv
+from pandas import read_csv, to_datetime
 from classes import Balancer
 
 
 def read_data():
-    print("read_input_data... preparing")
-    data = pd.read_csv("MAS_tests_input_data_red.csv", sep=";")
-    data = data.iloc[2:, :].reset_index(drop=True)
+    data = pd.read_csv('MAS_tests_input_data_red.csv', sep=";",  index_col=0)
     bounds = pd.read_csv('bounds.csv', sep=";", index_col=0)
-    roles = pd.read_csv('roles.csv', sep=";")
+    roles = pd.read_csv('roles.csv', sep=";", index_col=0)
+    #### konwersja typów
+    # data['Datetime'] = to_datetime(data['Datetime'])
+    print("2...")
+        
+    data.iloc[:, 1:] = data.iloc[:, 1:].astype(float)
+
+    print("3...")
+        
+    print(roles)
+    print(bounds)
+    print(data)
+
+    print("4...")
+        
+    roles['price'] = roles['price'].astype(float)
+
+    print("5...")
+        
+
+    for col in ['min', 'max']:
+        bounds[col] = bounds[col].apply(lambda x: float(x) if x != 'circ' else x)
+
+    data = data.iloc[2:, :].reset_index(drop=True)
+
     return data, bounds, roles
 
 

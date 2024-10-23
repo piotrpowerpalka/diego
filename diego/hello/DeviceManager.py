@@ -20,7 +20,11 @@ class DeviceManager(Agent):
         self.auctionee = self.config["auctionee"]
         
         self.roles =  pd.read_csv("roles_{}.csv".format(self.prefix), sep=";")
+        self.roles['price'] = self.roles['price'].astype(float)
+        
         self.bounds = pd.read_csv("bounds_{}.csv".format(self.prefix), sep=";")
+        for col in ['min', 'max']:
+            self.bounds[col] = self.bounds[col].apply(lambda x: float(x) if x != 'circ' else x)
         
         
     async def setup(self):

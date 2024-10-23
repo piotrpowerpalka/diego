@@ -20,8 +20,9 @@ class DummyBalancer(Agent):
 
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
-
+        print("1...")
         self.inp, self.bounds, self.roles = read_data()
+        print("10...")
         forecast_date = str(pd.to_datetime(DT) - Timedelta('15min'))
         currdate = str(self.datet)
         print("fd = {}, cd = {}".format(forecast_date, currdate))
