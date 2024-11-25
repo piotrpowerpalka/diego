@@ -51,10 +51,7 @@ def read_input_data(name):
 
 
 def balance(drow, limits, roles, forecast):
-    print("balance begin")
-    print("call for Balancer object")
     per_balancer = Balancer(drow, limits, roles, forecast)
-    print("calc fix dem")
     per_balancer.calc_fix_dem()
     (old_states, Ems_new_obs, Ems_new_pred, en_deltas,
      wp, autocons, tgs, blocked_devs, res_supp_devs) = per_balancer.balancing()
@@ -84,7 +81,7 @@ def merge_data(out_data, output_frame, inps):
     output_frame = output_frame.merge(inps, how='left', on=['Datetime'])
     output_frame = output_frame.merge(new_data, how='left', on=['Datetime'])
     output_frame['fcast_date'] = output_frame['Datetime']
-    output_frame['Datetime'] = pd.to_datetime(output_frame['Datetime']) + pd.Timedelta('15min')
+    output_frame['Datetime'] += pd.Timedelta('15min')
 
     field_list1 = [field + en for field in ['MS_observ_', 'pv_', 'eh_', 'evcs_'] for en in ['Ep', 'Eq']]
     field_list2 = ['SOC_Ep', 'inv1_Eq', 'pv_Ep_auto', 'pv_Eq_auto', 'tg']
@@ -114,36 +111,6 @@ def reconstruct(df, block_devs, res_supp_devs, wp):
         "saved_net_energy": {},
         "MS_workpoint": {}
      }
-    
-    out_devs = {'pv': {}, 
-                'eh': {}, 
-                'evcs': {}, 
-                'inv1': {}, 
-                'bystar1': {},
-                'bysprint': {}, 
-                'bystar2': {},
-                'mazak': {}
-    }
-
-    for dev in ['pv', 'eh', 'evcs', 'inv1', 'bystar1', 'bysprint', 'bystar2', 'mazak']:
-        out_devs[dev].update(
-            {'wp': {'P': is_inst(wp.loc['new', dev + '_' + "P"]), 
-                    'Q': is_inst(wp.loc['new', dev + '_' + "Q"])
-                    }, 
-             'energies': {'Ep': is_inst(df[dev + '_Ep_new'].values[0]), 
-                          'Eq': is_inst(df[dev + '_Eq_new'].values[0])
-                    }
-            }
-        )
-    for key, item in block_devs.items():
-        if key not in ['eh', 'evcs']:
-            out_devs[key].update(
-                {'statuses': {'Q_problem': item}, 'lamp_color': 'red' if item else 'green'}
-                )
-        else:
-            out_devs[key].update(
-                {'statuses': {'Q_block': item}}
-                )
 
     out_dict.update({"datetime": pd.Timestamp(df['Datetime'].values[0]).strftime('%Y-%m-%d %H:%M')})
 
@@ -152,8 +119,6 @@ def reconstruct(df, block_devs, res_supp_devs, wp):
         for power in ['P', 'Q']:
             val = is_inst(wp.loc['new', dev + '_' + power])
             out_dict["working_points"][dev].update({power: val})
-
-
 
     for dev in ['pv', 'eh', 'evcs', 'inv1', 'bystar1', 'bysprint', 'bystar2', 'mazak', 'MS_observ']:
         out_dict["energies"][dev] = {}
@@ -186,7 +151,7 @@ def reconstruct(df, block_devs, res_supp_devs, wp):
     val = is_inst(df['tg_new'].values[0])
     out_dict["MS_workpoint"].update({'tg': val})
 
-    return out_dict, out_devs
+    return out_dict
 
 
 def save_json(jobject):

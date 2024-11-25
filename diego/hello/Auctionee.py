@@ -88,9 +88,10 @@ class Auctionee(Agent):
                     msg_rply.set_metadata("performative", "accept_offer")
                     msg_rply.set_metadata("sender", self.agent.name)
                     msg_rply.set_metadata("language", "json")  
+                    msg_rply.body = msg.body
 
                     await self.send(msg_rply)
-                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: AucitonOperator".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
+                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Device Manager".format(msg_rply.get_metadata("performative"), self.agent.name, tojid, msg_rply.body))
                 
 
                 

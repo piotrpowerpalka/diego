@@ -36,4 +36,4 @@ services:
 #          memory: 75M
         limits:
           cpus: ${CPUS}
-          memory: ${MEMORY}
+          memory: 512MB

@@ -9,14 +9,27 @@ from functions import *
 from json import dumps
 from pandas import Timedelta
 from classes import *
+import traceback
+import sys
 
 
 DEFAULT_HOST = "server_hello"
 DT = "2024-01-02 00:00:00"
+PERIOD = 15
 
 class AuctionOperator(Agent):
     datetime = DT
+
+    flow = []
+    role = []
+    energy = []
+    price = []
+    device = []
     
+    en = []
+    min = []
+    max = []
+
 
     def __init__(self, jid: str, password: str, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
@@ -33,17 +46,26 @@ class AuctionOperator(Agent):
         print("Agent {} started".format(self.name))
 
         start_at1 = datetime.datetime.now()
-        cfp = self.CallForProposal(period=600, start_at=start_at1)
+        cfp = self.CallForProposal(period=60*PERIOD, start_at=start_at1)
         self.add_behaviour(cfp)
 
     async def balance(self):
-        print("balancing 0111")
+        self.offers_list['Datetime'] = pd.to_datetime(self.offers_list['Datetime'])
+        for col in self.offers_list.columns[1:]:
+            self.offers_list[col] = self.offers_list[col].astype(float)
+        print(self.forecast)
+        self.forecast['Datetime'] = pd.to_datetime(self.forecast['Datetime'])    
+        for col in self.forecast.columns[1:]:
+            self.forecast[col] = self.forecast[col].astype(float)
+        for col in ['min', 'max']:
+            self.bounds[col] = self.bounds[col].apply(lambda x: float(x) if x != 'circ' else x)
+        self.roles["price"] = self.roles["price"].astype(float)
+
         per_balancer = Balancer(self.offers_list, self.bounds, self.roles, self.forecast)
+
         per_balancer.calc_fix_dem()
         (old_states, Ems_new_obs, Ems_new_pred, en_deltas,
         wp, autocons, tgs, blocked_devs, res_supp_devs) = per_balancer.balancing()
-
-        print("balancing 111")
 
         state_comp_frame = pd.concat([old_states, Ems_new_pred,  Ems_new_pred-old_states])
         state_comp_frame.index = ['old', 'new', 'diff']
@@ -66,7 +88,7 @@ class AuctionOperator(Agent):
 
             self.agent.offers_list = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
             self.agent.forecast    = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
-
+            
             for curr_agent in self.agent.auctionee_list:
 
                 tojid = f"{curr_agent}@{DEFAULT_HOST}"
@@ -83,102 +105,107 @@ class AuctionOperator(Agent):
     
     class ReceiveOffers(CyclicBehaviour):
         async def run(self):
-            # print("[{}] ReceiveOffers beh running".format(self.agent.name))
-            msg = await self.receive(timeout=300)  # wait for a message for 300 seconds
-            if msg:
-#                print("[{}] Message received with content: {}".format(self.agent.jid, msg.body))
-                if (msg.get_metadata("language") == "json"):
-                    msg_json = json.loads(msg.body)
+            try:
+                # print("[{}] ReceiveOffers beh running".format(self.agent.name))
+                msg = await self.receive(timeout=300)  # wait for a message for 300 seconds
+                if msg:
+                    if (msg.get_metadata("language") == "json"):
+                        msg_json = json.loads(msg.body)
 
-                    self.agent.agentsAns.append(msg_json["device"])
+                        self.agent.agentsAns.append(msg_json["device"])
+#                        print("AO, otrzymano: {}".format(msg_json))
+                        for wpk in msg_json["workpoint"]:
+                            if wpk != 'Datetime':
+                                self.agent.offers_list.insert(1, wpk, msg_json["workpoint"][wpk])
 
-                    print("AO, otrzymano: {}".format(msg_json))
+                        for fck in msg_json["forecast"]:
+                            if fck != 'Datetime':
+                                self.agent.forecast.insert(1, fck, msg_json["forecast"][fck])
 
-                    for wpk in msg_json["workpoint"]:
-                        if wpk != 'Datetime':
-                            self.agent.offers_list.insert(1, wpk, msg_json["workpoint"][wpk])
+                        for pk in msg_json["prices"]["flow"]:   self.agent.flow.append(pk)
+                        for pk in msg_json["prices"]["role"]:   self.agent.role.append(pk)
+                        for pk in msg_json["prices"]["energy"]: self.agent.energy.append(pk)
+                        for pk in msg_json["prices"]["price"]:  self.agent.price.append(pk)
+                        for pk in msg_json["prices"]["device"]: self.agent.device.append(pk)
+                        for pk in msg_json["bounds"]["Unnamed: 0"]:   self.agent.en.append(pk)
+                        for pk in msg_json["bounds"]["min"]:          self.agent.min.append(pk)
+                        for pk in msg_json["bounds"]["max"]:          self.agent.max.append(pk)
+                    else:
+                        raise TypeError 
 
-                    for fck in msg_json["forecast"]:
-                        if fck != 'Datetime':
-                            self.agent.forecast.insert(1, fck, msg_json["forecast"][fck])
-
-                    flow = []
-                    role = []
-                    energy = []
-                    price = []
-                    device = []
-
-                    for pk in msg_json["prices"]["flow"]:   flow.append(pk)
-                    for pk in msg_json["prices"]["role"]:   role.append(pk)
-                    for pk in msg_json["prices"]["energy"]: energy.append(pk)
-                    for pk in msg_json["prices"]["price"]:  price.append(pk)
-                    for pk in msg_json["prices"]["device"]: device.append(pk)
-
-                    for i in range(len(flow)):
-                        self.agent.roles.loc[self.agent.roles.shape[0]] = [flow[i], role[i], energy[i], price[i], device[i]]
-
-                    en = []
-                    min = []
-                    max = []
-                    
-                    for pk in msg_json["bounds"]["Unnamed: 0"]:   en.append(pk)
-                    for pk in msg_json["bounds"]["min"]:          min.append(pk)
-                    for pk in msg_json["bounds"]["max"]:          max.append(pk)
-
-                    for i in range(len(en)):
-                        self.agent.bounds.loc[self.agent.bounds.shape[0]] = [en[i], min[i], max[i]]
-
-                    #print("AO offers list: {}".format(self.agent.offers_list))
-                    #print("AO roles  list: {}".format(self.agent.roles))
-                    #print("AO bounds list: {}".format(self.agent.bounds))
-                    #print("AO forecast list: {}".format(self.agent.forecast))
+                    if (len(self.agent.agentsAns) == len(self.agent.auctionee_list)):
+                        self.kill()
 
                 else:
-                    raise TypeError 
-
-                if (len(self.agent.agentsAns) == len(self.agent.auctionee_list)):
-                    print("balancing 000")
+                    print("[{}] ReceiveOffers: did not received any message after 10 seconds".format(self.agent.name))
                     self.kill()
+            except Exception:
+                print(traceback.format_exc()) # This line is for getting traceback.
+                print(sys.exc_info()[2]) # This line is getting for the error type.    
 
-            else:
-                print("[{}] ReceiveOffers: did not received any message after 10 seconds".format(self.agent.name))
-                self.kill()
-            
         async def on_end(self):
-#            cl = self.agent.Clear()
-#            self.agent.add_behaviour(cl)
-            print("[{}]Clear beh running".format(self.agent.name))
-            (state_comp_frame, blocked_devs, res_supp_devs, wp) = await self.agent.balance()
+            self.agent.bounds = pd.DataFrame(
+                {"min": self.agent.min, 
+                 "max": self.agent.max}, 
+                 index = self.agent.en
+            )
+            #', 'role', 'energy', 'price', 'device'
+            self.agent.roles = pd.DataFrame(
+                {"flow": self.agent.flow, 
+                 "role": self.agent.role,
+                 "energy": self.agent.energy,
+                 "price": self.agent.price,
+                 "device": self.agent.device}
+                )
+            cl = self.agent.Clear()
+            self.agent.add_behaviour(cl)
+
 
     class Clear(OneShotBehaviour):
         async def run(self):
             print("[{}]Clear beh running".format(self.agent.name))
             # insert code for clearing the offers
 
-            (state_comp_frame, blocked_devs, res_supp_devs, wp) = self.agent.balance(self.agent.offers_list, self.agent.bounds, self.agent.roles. self.agent.forecast)
+            (state_comp_frame, blocked_devs, res_supp_devs, wp) = await self.agent.balance()
+            self.agent.output_frame = self.agent.offers_list.copy()
+
+            wanted_date = DT
+            forecast_date = str(pd.to_datetime(DT) - Timedelta('15min'))
+            
+            self.agent.offers_list.loc[DT, 'SOC_Ep'] = state_comp_frame.loc['new', 'SOC_Ep']
+            self.agent.offers_list.loc[DT, 'SOC']    = state_comp_frame.loc['new', 'SOC']
+
+            fcst = self.agent.forecast.copy()
+            fcst['Datetime'] = DT # check!!!!!
+
+            soc_data = pd.DataFrame(self.agent.forecast.loc[0, ['Datetime', 'SOC', 'SOC_Ep']]).T
+            out = merge_data(state_comp_frame, fcst, soc_data)
+            self.agent.new_data_dict, self.agent.new_out_devs = reconstruct(out, blocked_devs, res_supp_devs, wp)
+
+            print("new data dict")
+            print(self.agent.new_data_dict)
+
+            print("new out devs")
+            print(self.agent.new_out_devs)
 
             sci = self.agent.SendClearingInfo()
             self.agent.add_behaviour(sci)
 
-            # clear data after balancing
-            self.offers_list = pd.DataFrame()
-            self.forecast    = pd.DataFrame()
-            self.roles       = pd.DataFrame(columns=['flow', 'role', 'energy', 'price', 'device'])
-            self.bounds      = pd.DataFrame(columns=["energy", "min", "max"])
     
     class SendClearingInfo(OneShotBehaviour):
         async def run(self):
             for curr_agent in self.agent.auctionee_list:
-
-                tojid = f"{curr_agent}@{DEFAULT_HOST}"
-                # Instantiate the message
-                msg = Message(to=tojid)
-                msg.set_metadata("performative", "inform")
-                msg.set_metadata("sender", self.agent.name)
+                short_name = curr_agent.split('_')[0]
+                if short_name in self.agent.new_out_devs:
+                    tojid = f"{curr_agent}@{DEFAULT_HOST}"
+                    # Instantiate the message
+                    msg = Message(to=tojid)
+                    msg.set_metadata("performative", "inform")
+                    msg.set_metadata("sender", self.agent.name)
+                    msg.body = dumps(self.agent.new_out_devs[short_name])
                 
-
-                await self.send(msg)
-                print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
+                    await self.send(msg)
+                    print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
 
 
 
