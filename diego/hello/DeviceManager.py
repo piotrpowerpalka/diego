@@ -108,12 +108,12 @@ class DeviceManager(Agent):
                     # [GetWorkingPoint] - from Auctionee - send it to Predictor
                     print("rec:  from:[{}] to: [{}] body: [{}]".format(msg.get_metadata("sender"), msg.to, msg.body))
 
-                    self.agent.SetWorkingPoint(json.loads(msg.body))
+                    self.agent.setWorkingPoint(json.loads(msg.body))
 
     ''' funkcja setWorkingPoint - do przepisania przez Electrum
         @wp: json z obliczonym punktem pracy
     '''
-    def setWorkingPoint(wp):
+    def setWorkingPoint(self, wp):
         print(wp)
 
 
