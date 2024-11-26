@@ -15,7 +15,9 @@ import sys
 
 DEFAULT_HOST = "server_hello"
 DT = '2024-01-31 00:30:00'
-PERIOD = 15
+PERIOD = 15     # period of balancing [minutes]
+# STEP = PERIOD   # uncomment in final version
+STEP   = 2      # step of running the balancing [minutes], for testing, comment in production 
 
 class AuctionOperator(Agent):
     datetime = DT
@@ -46,7 +48,7 @@ class AuctionOperator(Agent):
         print("Agent {} started".format(self.name))
 
         start_at1 = datetime.datetime.now()
-        cfp = self.CallForProposal(period=300, start_at=start_at1)
+        cfp = self.CallForProposal(period=STEP*60, start_at=start_at1)
         self.add_behaviour(cfp)
 
     async def balance(self):
@@ -88,6 +90,16 @@ class AuctionOperator(Agent):
 
             self.agent.fcst_date = str(pd.to_datetime(self.agent.datetime) - Timedelta("15min"))
 
+            if (self.agent.offers_list.empty == False):
+                self.agent.offers_list.iloc[0:0]
+            if (self.agent.forecast.empty == False):
+                self.agent.forecast.iloc[0:0]
+            if (self.agent.roles.empty == False):
+                self.agent.roles.iloc[0:0]
+            if (self.agent.bounds.empty == False):
+                self.agent.bounds.iloc[0:0]
+            self.agent.agentsAns  = []        
+            
             self.agent.offers_list = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
             self.agent.forecast    = pd.DataFrame(data={'Datetime': [self.agent.fcst_date]})
             

@@ -88,10 +88,6 @@ class DeviceManager(Agent):
 
                     body_json = json.loads(msg.body)
 
-                    
-                    print(self.agent.roles)
-                    print(self.agent.bounds)
-
                     json_prices = self.agent.getRoles()
                     json_bounds = self.agent.getBounds()
                     
