@@ -91,108 +91,59 @@ async def main():
             # await xxx.start(auto_register=True)
             # uruchamiamy agenta Predictor dla każdego urządzenia
             await prd_pv.start(auto_register=True)          # ok
-            
             await prd_bysprint.start(auto_register=True)    # ok
-            
             await prd_bystar1.start(auto_register=True)     # ok
-            
             await prd_bystar2.start(auto_register=True)     # ok
-            
             await prd_mazak.start(auto_register=True)       # ok
-            
             await prd_eh.start(auto_register=True)          # ok
-            
             await prd_inv1.start(auto_register=True)        # ok
-            
             await prd_inv2.start(auto_register=True)        # ok
-            
             await prd_sg1.start(auto_register=True)         # ok
-            
             await prd_sg2.start(auto_register=True)         # ok
-            
             await prd_sg3.start(auto_register=True)         # ok
-            
             await prd_sg4.start(auto_register=True)         # ok
-            
             await prd_evcs.start(auto_register=True)        # ok
-            
             await prd_SOC.start(auto_register=True)
-            
             await prd_sg1prim.start(auto_register=True)     # ok
-            
             await prd_MS.start(auto_register=True)
-            
             await prd_network.start(auto_register=True)     # ok
-            
             
             # # uruchamiamy agenta DeviceManager dla każdego urządzenia
             await dm_pv.start(auto_register=True)
-            
             await dm_bysprint.start(auto_register=True)
-            
             await dm_bystar1.start(auto_register=True)
-            
             await dm_bystar2.start(auto_register=True)
-            
             await dm_mazak.start(auto_register=True)
-            
             await dm_eh.start(auto_register=True)
-            
             await dm_inv1.start(auto_register=True)
-            
             await dm_inv2.start(auto_register=True)
-            
             await dm_sg1.start(auto_register=True)
-            
             await dm_sg2.start(auto_register=True)
-            
             await dm_sg3.start(auto_register=True)
-            
             await dm_sg4.start(auto_register=True)
-            
             await dm_evcs.start(auto_register=True)
-            
             await dm_SOC.start(auto_register=True)
-            
             await dm_sg1prim.start(auto_register=True)
-            
             await dm_MS.start(auto_register=True)
-            
             await dm_network.start(auto_register=True)
             
             # # uruchamiamy agenta Auctionee dla każdego urządzenia
             await auc_pv.start(auto_register=True)
-            
             await auc_bysprint.start(auto_register=True)
-            
             await auc_bystar1.start(auto_register=True)
-            
             await auc_bystar2.start(auto_register=True)
-            
             await auc_mazak.start(auto_register=True)
-            
             await auc_eh.start(auto_register=True)
-            
             await auc_inv1.start(auto_register=True)
-            
             await auc_inv2.start(auto_register=True)
-            
             await auc_sg1.start(auto_register=True)
-            
             await auc_sg2.start(auto_register=True)
-            
             await auc_sg3.start(auto_register=True)
-            
             await auc_sg4.start(auto_register=True)
-            
             await auc_evcs.start(auto_register=True)
-            
             await auc_SOC.start(auto_register=True)
-            
             await auc_sg1prim.start(auto_register=True)
-            
             await auc_MS.start(auto_register=True)
-            
             await auc_network.start(auto_register=True)
             
             # # uruchamiamy jednego AuctionOperator

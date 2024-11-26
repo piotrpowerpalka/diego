@@ -16,7 +16,6 @@ DEFAULT_HOST = "server_hello"
 class Auctionee(Agent):
     def __init__(self, jid: str, password: str, config: dict, verify_security: bool = False):
         super().__init__(jid, password, verify_security)
-        self.offer = {"volume": 10.0, "price": 25, "energy": 'active'}
         self.config = config
         self.device_manager = self.config["device_manager"]
         self.auction_operator = self.config["auction_operator"]

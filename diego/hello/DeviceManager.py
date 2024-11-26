@@ -53,8 +53,6 @@ class DeviceManager(Agent):
                 attr.append(str(self.roles.iat[r,c]))
             json_roles[self.roles.columns[c]] = attr
 
-        print(json_roles)
-
         return json_roles
 
     class WaitForRequest(CyclicBehaviour):

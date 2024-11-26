@@ -14,7 +14,7 @@ import sys
 
 
 DEFAULT_HOST = "server_hello"
-DT = "2024-01-02 00:00:00"
+DT = '2024-01-31 00:30:00'
 PERIOD = 15
 
 class AuctionOperator(Agent):
@@ -46,14 +46,14 @@ class AuctionOperator(Agent):
         print("Agent {} started".format(self.name))
 
         start_at1 = datetime.datetime.now()
-        cfp = self.CallForProposal(period=60*PERIOD, start_at=start_at1)
+        cfp = self.CallForProposal(period=300, start_at=start_at1)
         self.add_behaviour(cfp)
 
     async def balance(self):
         self.offers_list['Datetime'] = pd.to_datetime(self.offers_list['Datetime'])
         for col in self.offers_list.columns[1:]:
             self.offers_list[col] = self.offers_list[col].astype(float)
-        print(self.forecast)
+        
         self.forecast['Datetime'] = pd.to_datetime(self.forecast['Datetime'])    
         for col in self.forecast.columns[1:]:
             self.forecast[col] = self.forecast[col].astype(float)
@@ -86,8 +86,10 @@ class AuctionOperator(Agent):
             ro = self.agent.ReceiveOffers()
             self.agent.add_behaviour(ro)
 
+            self.agent.fcst_date = str(pd.to_datetime(self.agent.datetime) - Timedelta("15min"))
+
             self.agent.offers_list = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
-            self.agent.forecast    = pd.DataFrame(data={'Datetime': [self.agent.datetime]})
+            self.agent.forecast    = pd.DataFrame(data={'Datetime': [self.agent.fcst_date]})
             
             for curr_agent in self.agent.auctionee_list:
 
@@ -169,18 +171,30 @@ class AuctionOperator(Agent):
             (state_comp_frame, blocked_devs, res_supp_devs, wp) = await self.agent.balance()
             self.agent.output_frame = self.agent.offers_list.copy()
 
-            wanted_date = DT
-            forecast_date = str(pd.to_datetime(DT) - Timedelta('15min'))
+            wanted_date = self.agent.datetime
+            forecast_date = str(pd.to_datetime(self.agent.datetime) - Timedelta('15min'))
             
-            self.agent.offers_list.loc[DT, 'SOC_Ep'] = state_comp_frame.loc['new', 'SOC_Ep']
-            self.agent.offers_list.loc[DT, 'SOC']    = state_comp_frame.loc['new', 'SOC']
+            self.agent.offers_list.loc[self.agent.datetime, 'SOC_Ep'] = state_comp_frame.loc['new', 'SOC_Ep']
+            self.agent.offers_list.loc[self.agent.datetime, 'SOC']    = state_comp_frame.loc['new', 'SOC']
 
             fcst = self.agent.forecast.copy()
-            fcst['Datetime'] = DT # check!!!!!
+            fcst['Datetime'] = self.agent.fcst_date # check!!!!!
 
             soc_data = pd.DataFrame(self.agent.forecast.loc[0, ['Datetime', 'SOC', 'SOC_Ep']]).T
             out = merge_data(state_comp_frame, fcst, soc_data)
             self.agent.new_data_dict, self.agent.new_out_devs = reconstruct(out, blocked_devs, res_supp_devs, wp)
+
+            print("1merge")
+            print(state_comp_frame)
+
+            print("2merge")
+            print(fcst)
+
+            print("3merge")
+            print(soc_data)
+
+            print("OUT")
+            print(out)
 
             print("new data dict")
             print(self.agent.new_data_dict)
@@ -206,6 +220,8 @@ class AuctionOperator(Agent):
                 
                     await self.send(msg)
                     print("send: prf: [{}] from:[{}] to:[{}] body:[{}] tgt: Auctionee".format(msg.get_metadata("performative"), self.agent.name, tojid, msg.body))
+
+            self.agent.datetime = str(pd.to_datetime(self.agent.datetime) + Timedelta("{}min".format(PERIOD)))
 
 
 
