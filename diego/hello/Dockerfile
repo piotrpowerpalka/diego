@@ -1,9 +1,10 @@
-FROM python:3.10
+FROM python:3.12
 
 WORKDIR /app
 COPY . /app
 
-RUN pip install spade
+# ! SPADE lib above v3.3.3 is not working with this implementation
+RUN pip install spade==3.3.3 
 RUN pip install numpy
 RUN pip install pandas
 #RUN pip install openpyxl
