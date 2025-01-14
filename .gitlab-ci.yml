@@ -1,0 +1,16 @@
+stages:
+  - deploy
+
+before_script:
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+
+deploy:
+  stage: deploy
+  script:
+    - docker-compose down
+    - docker-compose up -d --build
+  environment:
+    name: production
+  tags:
+    - prod-storage-shell-runner 
+  when: manual 

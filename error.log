@@ -1,7 +1,0 @@
-DEBUG:root:Program starts running
-ERROR:SPADE:Exception in the event loop: 'AuctionOperator' object has no attribute 'verify_security'
-DEBUG:SPADE:Loop closed
-ERROR:SPADE:Exception in the event loop: 'AuctionOperator' object has no attribute 'verify_security'
-DEBUG:SPADE:Loop closed
-ERROR:SPADE:Exception in the event loop: 'AuctionOperator' object has no attribute 'verify_security'
-DEBUG:SPADE:Loop closed

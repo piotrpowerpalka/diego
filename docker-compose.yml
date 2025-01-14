@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  server:
+    image: tigase/tigase-xmpp-server:8.0.0
+    ports:
+      - "8480:8080"
+      - "5222:5222"
+    environment:
+      - DB_ROOT_USER=${DB_ROOT_USER}
+      - DB_ROOT_PASS=${DB_ROOT_PASS}
+      - ADMIN_JID=${ADMIN_JID}
+      - ADMIN_DOMAIN=server
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    volumes:
+      - ./src/tigase/config/tigase.conf:/home/tigase/tigase-server/etc/tigase.conf
+      - ./src/tigase/config/config.tdsl:/home/tigase/tigase-server/etc/config.tdsl
+
+  app:
+    image: mas-app:latest
+    build: 
+      context: ./src/app
+      dockerfile: Dockerfile
+    environment:
+      - TZ=Europe/Warsaw
+      - SERVER_HOST=server
+      - CSV_DATA_PATH=data/
+      - CSV=true
+      - API_HOST=http://10.100.212.20:8080
+      - API_AUTH=Basic bGx1cGluc2tpOkFiY2QxMjM0
+      - DELAY_SEC=120
+    volumes:
+      - ./src/data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: ${CPUS}
+          memory: ${MEMORY}
